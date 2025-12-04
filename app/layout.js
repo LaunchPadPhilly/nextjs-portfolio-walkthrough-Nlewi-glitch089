@@ -9,14 +9,12 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="flex flex-col min-h-screen" style={{ background: 'linear-gradient(to bottom right, #fdf2f8, #faf5ff, #fdf2f8)' }}>
+    <html lang="en" className="scroll-smooth">
+      <body className="min-h-screen flex flex-col font-sans">
         <Navbar />
-        
-        <main className="flex-grow">
+        <main className="flex-grow pt-6 pb-12">
           {children}
         </main>
-        
         <Footer />
       </body>
     </html>

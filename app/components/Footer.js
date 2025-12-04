@@ -1,14 +1,9 @@
 export default function Footer() {
-  const currentYear = new Date().getFullYear()
-  
   return (
-    <footer className="bg-white/90 backdrop-blur-sm border-t border-purple-100 text-center p-8 mt-auto">
-      <div className="max-w-7xl mx-auto">
-        <p className="text-gray-600">
-          © {currentYear} Asma Drummond. Built with Next.js and Tailwind CSS
-        </p>
+    <footer className="mt-12 border-t border-slate-700/60 bg-slate-900/60 backdrop-blur">
+      <div className="max-w-7xl mx-auto px-6 py-10 text-center">
+        <p className="text-sm text-slate-400">© 2025 Jaylen Marshall. Built with Next.js & Tailwind CSS.</p>
       </div>
     </footer>
   )
 }
-

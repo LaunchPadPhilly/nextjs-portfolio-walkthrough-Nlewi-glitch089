@@ -2,102 +2,111 @@ import Image from 'next/image'
 
 export default function About() {
   return (
-    <div className="min-h-screen p-8 py-16">
+    <div className="px-6 py-12">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-5xl md:text-6xl font-bold mb-12 text-center text-purple-400">
-          About Me
-        </h1>
+        <h1 className="section-heading text-center mb-16">About Me</h1>
         
-        <div className="bg-white rounded-lg shadow-sm border border-pink-100 p-8 md:p-12 mb-8">
-          <div className="flex flex-col md:flex-row gap-8 items-center mb-8">
+        <div className="card-surface p-8 md:p-10 mb-12">
+          <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
             {/* Profile photo */}
             <div className="flex-shrink-0">
-              <Image 
-                src="/profile.jpg"
-                alt="Profile photo"
-                width={300}
-                height={300}
-                className="rounded-full border-4 border-pink-200 shadow-sm"
-              />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full blur-lg opacity-30"></div>
+                <Image 
+                  src="/profile.jpg"
+                  alt="My photo"
+                  width={200}
+                  height={200}
+                  className="rounded-full relative z-10 border-4 border-slate-700/50"
+                />
+              </div>
             </div>
             
             {/* Bio */}
-            <div className="flex-grow">
-              <h2 className="text-3xl font-bold mb-4 text-pink-400">Hello! I'm Asma Drummond</h2>
-              <p className="text-lg text-purple-300 leading-relaxed mb-4">
-                I'm an aspiring UX designer with a passion for creating beautiful, user-centered digital experiences. 
-                I love combining my creative side with technical skills to build interfaces that are both visually 
-                appealing and intuitive to use.
+            <div className="space-y-4 text-slate-300">
+              <p className="text-base leading-relaxed">
+                I'm a motivated Front-End Engineer currently in my LiftOff year at Launchpad, where I'm gaining hands-on experience in Front-End web development.
               </p>
-              <p className="text-lg text-purple-300 leading-relaxed mb-4">
-                When I'm not designing, I'm exploring digital art and coding. Digital art allows me to express 
-                my creativity and experiment with visual aesthetics, while coding gives me the power to bring 
-                my designs to life. I believe the best user experiences come from the perfect blend of art and 
-                technology.
+              <p className="text-base leading-relaxed">
+                What drives me is the challenge of turning ideas into clean, functional, and user-friendly web applications. Through Launchpad, I've been developing projects using tech languages like HTML, CSS, JavaScript, React and Next.js, while applying agile practices, version control (Git/GitHub), and problem-solving strategies that mirror real-world development environments.
               </p>
-              <p className="text-lg text-purple-300 leading-relaxed">
-                My goal is to continue growing as a UX designer, learning new tools and techniques that help me 
-                create meaningful connections between users and the digital products they interact with every day.
+              <p className="text-base leading-relaxed">
+                I'm continuously learning and refining my craft, not just to write code, but to write maintainable, scalable solutions that make a real impact. Looking ahead, I'm eager to grow into a Front-End developer role, where I can collaborate with teams, learn from experienced engineers, and contribute to projects that push my skills and creativity even further.
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Skills */}
+        <div className="card-surface p-8 md:p-10 mb-12">
+          <h2 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Skills & Technologies</h2>
+          <div className="flex flex-wrap gap-3 justify-center">
+            {/* Programming Languages */}
+            <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
+            <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+            <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5" />
+            <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3" />
+        
+            {/* Frameworks & Libraries */}
+            <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
+            <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" />
+            <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+            <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express.js" />
+            <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+        
+            {/* Tools & Platforms */}
+            <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white" alt="Git" />
+            <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" />
+            <img src="https://img.shields.io/badge/VS_Code-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="VS Code" />
+            <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
+            <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+            <img src="https://img.shields.io/badge/npm-CB3837?style=for-the-badge&logo=npm&logoColor=white" alt="npm" />
+        
+            {/* Database & APIs */}
+            <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" />
+            <img src="https://img.shields.io/badge/REST_APIs-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="REST APIs" />
+        
+            {/* Design & Collaboration */}
+            <img src="https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white" alt="Figma" />
+            <img src="https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white" alt="Notion" />
+            <img src="https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white" alt="Slack" />
+            <img src="https://img.shields.io/badge/ChatGPT-10A37F?style=for-the-badge&logo=openai&logoColor=white" alt="ChatGPT" />
           </div>
         </div>
         </div>
         {/* Skills */}
 
-        {/* Skills Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-purple-100 p-8 md:p-12 mb-8">
-          <h2 className="text-3xl font-bold mb-6 text-purple-400">My Skills</h2>
-          <div className="flex flex-wrap gap-3">
-            <span className="bg-pink-100 text-pink-700 px-4 py-2 rounded-full font-semibold">
-              HTML & CSS
-            </span>
-            <span className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full font-semibold">
-              JavaScript
-            </span>
-            <span className="bg-pink-200 text-pink-800 px-4 py-2 rounded-full font-semibold">
-              React
-            </span>
-            <span className="bg-purple-200 text-purple-800 px-4 py-2 rounded-full font-semibold">
-              Next.js
-            </span>
-            <span className="bg-pink-100 text-pink-700 px-4 py-2 rounded-full font-semibold">
-              Tailwind CSS
-            </span>
-            <span className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full font-semibold">
-              Git & GitHub
-            </span>
-            <span className="bg-pink-200 text-pink-800 px-4 py-2 rounded-full font-semibold">
-              Node.js
-            </span>
-            <span className="bg-purple-200 text-purple-800 px-4 py-2 rounded-full font-semibold">
-              Responsive Design
-            </span>
-          </div>
-        </div>
-
-        {/* Goals/Interests Section */}
-        <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg shadow-sm border border-pink-100 p-8 md:p-12">
-          <h2 className="text-3xl font-bold mb-6 text-pink-400">What I'm Learning</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-pink-100">
-              <h3 className="text-xl font-bold mb-3 text-purple-400">Current Focus</h3>
-              <ul className="space-y-2 text-purple-300">
-                <li>• Advanced React patterns and hooks</li>
-                <li>• Full-stack development with Next.js</li>
-                <li>• Database design and optimization</li>
-                <li>• API development and integration</li>
-              </ul>
+        {/* Education & Experience */}
+        <div className="card-surface p-8 md:p-10">
+          <h2 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Education & Experience</h2>
+          <div className="space-y-10">
+            {/* Launchpad */}
+            <div className="relative border-l-4 border-blue-500 pl-8 hover:border-blue-400 transition-colors">
+              <div className="absolute -left-3 top-0 w-5 h-5 bg-blue-500 rounded-full border-4 border-slate-900"></div>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
+                <h3 className="text-xl font-semibold text-white">Launchpad - LiftOff Program</h3>
+                <span className="text-sm text-slate-400 font-medium whitespace-nowrap">June 2025 - Present</span>
+              </div>
+              <p className="text-blue-400 italic mb-3 text-sm">Front-End Web Development</p>
+              <p className="text-slate-300 leading-relaxed">
+                Intensive hands-on training in front-end web development, focusing on modern frameworks and best practices. 
+                Building real-world projects using React, Next.js, and responsive design principles while learning agile 
+                methodologies, version control, and professional development workflows.
+              </p>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-purple-100">
-              <h3 className="text-xl font-bold mb-3 text-pink-400">Future Goals</h3>
-              <ul className="space-y-2 text-pink-300">
-                <li>• Build scalable web applications</li>
-                <li>• Contribute to open-source projects</li>
-                <li>• Master cloud deployment and DevOps</li>
-                <li>• Create impactful digital experiences</li>
-              </ul>
+
+            {/* SLA Beeber */}
+            <div className="relative border-l-4 border-green-500 pl-8 hover:border-green-400 transition-colors">
+              <div className="absolute -left-3 top-0 w-5 h-5 bg-green-500 rounded-full border-4 border-slate-900"></div>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
+                <h3 className="text-xl font-semibold text-white">Science Leadership Academy at Beeber</h3>
+                <span className="text-sm text-slate-400 font-medium whitespace-nowrap">Graduated 2024</span>
+              </div>
+              <p className="text-green-400 italic mb-3 text-sm">High School Diploma</p>
+              <p className="text-slate-300 leading-relaxed">
+                Graduated with a strong foundation in science, technology, and leadership. Developed critical thinking 
+                and problem-solving skills that laid the groundwork for my journey into web development.
+              </p>
             </div>
           </div>
         </div>

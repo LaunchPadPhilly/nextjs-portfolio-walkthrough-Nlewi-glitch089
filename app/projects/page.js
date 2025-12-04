@@ -26,37 +26,36 @@ export default function Projects() {
   ]
 
   return (
-    <div className="min-h-screen p-8 py-16">
+    <div className="px-6 py-12 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-5xl md:text-6xl font-bold mb-4 text-center text-purple-400">
-          My Projects
-        </h1>
-        <p className="text-xl text-purple-300 text-center mb-12">
-          Here are some of the projects I've been working on
+        <h1 className="section-heading text-center mb-4">My Projects</h1>
+        <p className="text-center text-slate-300 text-lg mb-16 max-w-2xl mx-auto">
+          Here are some of my recent projects showcasing my skills in web development and AI integration.
         </p>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project, index) => (
-            <div 
-              key={index}
-              className="bg-white rounded-lg shadow-sm border border-pink-100 overflow-hidden hover:shadow-md transition-shadow duration-300"
-            >
-              {/* Project Image */}
-              <div className="relative h-48 w-full">
-                <Image 
-                  src={project.image}
-                  alt={project.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-4 right-4">
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                    project.status === "Completed" 
-                      ? "bg-purple-200 text-purple-800" 
-                      : "bg-pink-200 text-pink-800"
-                  }`}>
-                    {project.status}
-                  </span>
+          {/* Formora */}
+          <div className="card-surface overflow-hidden group cursor-pointer">
+            <div className="h-48 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+              <Image src="/sa-logo.png" alt="Formora Logo" width={100} height={100} className="object-contain drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-500"/>
+            </div>
+            <div className="p-6">
+              <h3 className="text-2xl font-bold mb-3 text-white group-hover:text-blue-400 transition-colors">Formora</h3>
+              <p className="text-sm text-slate-300 mb-6 leading-relaxed min-h-[60px]">
+                AI-powered educational platform that creates personalized learning paths tailored to your career goals.
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <h4 className="text-xs font-semibold text-blue-400 mb-2 uppercase tracking-wider">Technologies</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-3 py-1.5 rounded-full bg-blue-600/20 text-blue-300 text-xs font-medium border border-blue-500/30">React</span>
+                    <span className="px-3 py-1.5 rounded-full bg-blue-600/20 text-blue-300 text-xs font-medium border border-blue-500/30">JavaScript</span>
+                    <span className="px-3 py-1.5 rounded-full bg-blue-600/20 text-blue-300 text-xs font-medium border border-blue-500/30">Firebase</span>
+                    <span className="px-3 py-1.5 rounded-full bg-blue-600/20 text-blue-300 text-xs font-medium border border-blue-500/30">OpenAI API</span>
+                    <span className="px-3 py-1.5 rounded-full bg-blue-600/20 text-blue-300 text-xs font-medium border border-blue-500/30">Vite</span>
+                    <span className="px-3 py-1.5 rounded-full bg-blue-600/20 text-blue-300 text-xs font-medium border border-blue-500/30">HTML/CSS</span>
+                  </div>
                 </div>
               </div>
               
@@ -81,32 +80,59 @@ export default function Projects() {
                   ))}
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <button className="flex-1 bg-pink-200 text-pink-800 px-4 py-2 rounded-lg font-semibold hover:bg-pink-300 transition-all">
-                    View Project
-                  </button>
-                  <button className="flex-1 bg-purple-200 text-purple-800 px-4 py-2 rounded-lg font-semibold hover:bg-purple-300 transition-all">
-                    Source Code
-                  </button>
+          {/* Arcania */}
+          <div className="card-surface overflow-hidden group cursor-pointer">
+            <div className="h-48 bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+              <Image src="/arcania-logo2.png" alt="Arcania Logo" width={100} height={100} className="object-contain drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-500"/>
+            </div>
+            <div className="p-6">
+              <h3 className="text-2xl font-bold mb-3 text-white group-hover:text-purple-400 transition-colors">Arcania</h3>
+              <p className="text-sm text-slate-300 mb-6 leading-relaxed min-h-[60px]">
+                AI-powered Minecraft build assistant that generates creative concepts from your descriptions.
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <h4 className="text-xs font-semibold text-purple-400 mb-2 uppercase tracking-wider">Technologies</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-3 py-1.5 rounded-full bg-purple-600/20 text-purple-300 text-xs font-medium border border-purple-500/30">React</span>
+                    <span className="px-3 py-1.5 rounded-full bg-purple-600/20 text-purple-300 text-xs font-medium border border-purple-500/30">JavaScript</span>
+                    <span className="px-3 py-1.5 rounded-full bg-purple-600/20 text-purple-300 text-xs font-medium border border-purple-500/30">Groq API</span>
+                    <span className="px-3 py-1.5 rounded-full bg-purple-600/20 text-purple-300 text-xs font-medium border border-purple-500/30">OpenAI API</span>
+                    <span className="px-3 py-1.5 rounded-full bg-purple-600/20 text-purple-300 text-xs font-medium border border-purple-500/30">Vite</span>
+                    <span className="px-3 py-1.5 rounded-full bg-purple-600/20 text-purple-300 text-xs font-medium border border-purple-500/30">HTML/CSS</span>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
 
-        {/* Call to Action */}
-        <div className="mt-16 bg-gradient-to-r from-pink-100 to-purple-100 rounded-lg shadow-sm border border-pink-200 p-8 md:p-12 text-center">
-          <h2 className="text-3xl font-bold mb-4 text-purple-400">Interested in Working Together?</h2>
-          <p className="text-xl mb-6 text-purple-300">
-            I'm always open to discussing new projects and opportunities.
-          </p>
-          <a 
-            href="/contact" 
-            className="inline-block bg-pink-200 text-pink-800 px-8 py-3 rounded-lg font-semibold hover:bg-pink-300 transition-all shadow-sm"
-          >
-            Get In Touch
-          </a>
+          {/* Najah */}
+          <div className="card-surface overflow-hidden group cursor-pointer">
+            <div className="h-48 bg-gradient-to-br from-green-600 via-emerald-500 to-teal-500 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+              <Image src="/najah-logo.png" alt="Najah Logo" width={100} height={100} className="object-contain drop-shadow-2xl relative z-10 group-hover:scale-110 transition-transform duration-500"/>
+            </div>
+            <div className="p-6">
+              <h3 className="text-2xl font-bold mb-3 text-white group-hover:text-green-400 transition-colors">Najah</h3>
+              <p className="text-sm text-slate-300 mb-6 leading-relaxed min-h-[60px]">
+                Study productivity application helping students stay organized, focused, and achieve their goals.
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <h4 className="text-xs font-semibold text-green-400 mb-2 uppercase tracking-wider">Technologies</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-3 py-1.5 rounded-full bg-green-600/20 text-green-300 text-xs font-medium border border-green-500/30">React</span>
+                    <span className="px-3 py-1.5 rounded-full bg-green-600/20 text-green-300 text-xs font-medium border border-green-500/30">JavaScript</span>
+                    <span className="px-3 py-1.5 rounded-full bg-green-600/20 text-green-300 text-xs font-medium border border-green-500/30">Gemini API</span>
+                    <span className="px-3 py-1.5 rounded-full bg-green-600/20 text-green-300 text-xs font-medium border border-green-500/30">Markdown</span>
+                    <span className="px-3 py-1.5 rounded-full bg-green-600/20 text-green-300 text-xs font-medium border border-green-500/30">Vite</span>
+                    <span className="px-3 py-1.5 rounded-full bg-green-600/20 text-green-300 text-xs font-medium border border-green-500/30">HTML/CSS</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
