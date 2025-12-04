@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import styles from './projects.module.css'
 import aboutStyles from '../about/about.module.css'
+import Link from 'next/link'
 import Image from 'next/image'
 
 export default function Projects() {

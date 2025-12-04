@@ -1,4 +1,5 @@
 import styles from './page.module.css'
+import Link from 'next/link'
 
 export default function Home() {
   return (
@@ -43,7 +44,7 @@ export default function Home() {
               <p style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
                 PlayerLobby — an early prototype for coordinating local and online gaming hangouts with presence awareness and quick invites. Click to view the project or explore more on the Projects page.
               </p>
-              <a href="/projects" style={{ marginTop: 12, display: 'inline-block', padding: '8px 12px', borderRadius: 8, background: 'linear-gradient(90deg,var(--accent-cyan),var(--accent-magenta))', color: '#0b0b0b', fontWeight: 800, textDecoration: 'none' }}>See Projects</a>
+              <Link href="/projects" style={{ marginTop: 12, display: 'inline-block', padding: '8px 12px', borderRadius: 8, background: 'linear-gradient(90deg,var(--accent-cyan),var(--accent-magenta))', color: '#0b0b0b', fontWeight: 800, textDecoration: 'none' }}>See Projects</Link>
             </div>
           </aside>
         </div>
