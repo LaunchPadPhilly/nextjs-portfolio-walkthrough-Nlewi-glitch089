@@ -40,4 +40,6 @@ jobs:
           BUILD-TEST_RESULTS: "${{steps.build-test.outputs.result}}"
           LINT-TEST_RESULTS: "${{steps.lint-test.outputs.result}}"
         with:
-          runners: install-dependencies,file-structure-test,component-tests,code-quality-tests,build-test,lint-test
+          # Action expects a single string containing comma-separated runner IDs.
+          # Quote to ensure YAML treats it as one string rather than a sequence.
+          runners: "install-dependencies,file-structure-test,component-tests,code-quality-tests,build-test,lint-test"
