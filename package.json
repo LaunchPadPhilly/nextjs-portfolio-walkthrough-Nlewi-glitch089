@@ -1,0 +1,42 @@
+{
+  "name": "week1-portfolio-starter",
+  "version": "1.0.0",
+  "description": "Week 1: Next.js Portfolio Project - GitHub Classroom Template",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:db": "node scripts/test-db.js",
+    "test:prisma": "node scripts/test-prisma.js",
+    "prisma:generate": "prisma generate",
+    "db:generate": "node scripts/run-prisma.js generate --schema ./nextjs-portfolio-walkthrough-Nlewi-glitch089/prisma/schema.prisma",
+    "db:push": "node scripts/run-prisma.js db push --schema ./nextjs-portfolio-walkthrough-Nlewi-glitch089/prisma/schema.prisma",
+    "db:seed": "node ./nextjs-portfolio-walkthrough-Nlewi-glitch089/prisma/seed.js",
+    "db:studio": "node scripts/run-prisma.js studio --schema ./nextjs-portfolio-walkthrough-Nlewi-glitch089/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "next": "^15.0.3",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@prisma/client": "4.16.0",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^15.0.3",
+    "jsdom": "^23.0.1",
+    "postcss": "^8.4.32",
+    "prisma": "4.16.0",
+    "vitest": "^4.0.15"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
