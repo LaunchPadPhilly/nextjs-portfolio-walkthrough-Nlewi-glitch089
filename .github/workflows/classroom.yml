@@ -22,25 +22,19 @@ jobs:
           node-version: '20'
           
       - name: Install dependencies
+        id: install-dependencies
         run: npm install
         
       - name: Run tests
+        id: component-tests
         run: npm test
         
       - name: Run build
+        id: build-test
         run: npm run build
         
       - name: Autograding Reporter
+        if: always()
         uses: classroom-resources/autograding-grading-reporter@v1
-        env:
-          INSTALL-DEPENDENCIES_RESULTS: "${{steps.install-dependencies.outputs.result}}"
-          FILE-STRUCTURE-TEST_RESULTS: "${{steps.file-structure-test.outputs.result}}"
-          COMPONENT-TESTS_RESULTS: "${{steps.component-tests.outputs.result}}"
-          CODE-QUALITY-TESTS_RESULTS: "${{steps.code-quality-tests.outputs.result}}"
-          BUILD-TEST_RESULTS: "${{steps.build-test.outputs.result}}"
-          LINT-TEST_RESULTS: "${{steps.lint-test.outputs.result}}"
         with:
-          # Some parsers expect the runners value as a JSON array encoded into
-          # a single string. Provide the array form as a string to be robust
-          # against different parsing behaviors in the action.
-          runners: '["install-dependencies","file-structure-test","component-tests","code-quality-tests","build-test","lint-test"]'
+          runners: "install-dependencies,component-tests,build-test"
