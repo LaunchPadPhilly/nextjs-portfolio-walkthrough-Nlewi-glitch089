@@ -1,7 +1,7 @@
 import './globals.css'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-import Parallax from './components/Parallax'
+import ClientParallaxWrapper from './components/ClientParallaxWrapper'
 
 export const metadata = {
   title: 'My Portfolio',
@@ -11,18 +11,13 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="app-root">
-        {/* animated background layers */}
-        <div className="cosmic-bg" aria-hidden="true">
-          <div className="gradient" />
-          <div className="nebula" />
-          <div className="stars" />
-        </div>
-        <Parallax />
+      <body className="min-h-screen flex flex-col">
+        {/* animated background layers (client) */}
+        <ClientParallaxWrapper />
 
         <Navbar />
 
-        <main style={{ flex: 1 }}>
+        <main className="flex-1">
           {children}
         </main>
 

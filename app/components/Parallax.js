@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 
-export default function Parallax() {
+export default function Parallax({ cosmicRef }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -12,10 +12,10 @@ export default function Parallax() {
     let raf = null
     let active = false
 
-    const cosmic = document.querySelector('.cosmic-bg')
-    const gradient = document.querySelector('.cosmic-bg .gradient')
-    const nebula = document.querySelector('.cosmic-bg .nebula')
-    const stars = document.querySelector('.cosmic-bg .stars')
+    const cosmic = cosmicRef && cosmicRef.current ? cosmicRef.current : document.querySelector('.cosmic-bg')
+    const gradient = cosmic ? cosmic.querySelector('.gradient') : document.querySelector('.cosmic-bg .gradient')
+    const nebula = cosmic ? cosmic.querySelector('.nebula') : document.querySelector('.cosmic-bg .nebula')
+    const stars = cosmic ? cosmic.querySelector('.stars') : document.querySelector('.cosmic-bg .stars')
     const hero = document.querySelector('.hero')
 
     // multipliers — make these stronger for more intense effect
@@ -158,7 +158,7 @@ export default function Parallax() {
       try { if (starInterval) clearInterval(starInterval) } catch(e) {}
       try { if (activityObserver) activityObserver.disconnect() } catch(e) {}
     }
-  }, [])
+  }, [cosmicRef])
 
   return null
 }

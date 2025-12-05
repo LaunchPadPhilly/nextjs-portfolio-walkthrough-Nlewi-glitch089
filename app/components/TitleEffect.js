@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef } from 'react'
-import styles from '../page.module.css'
 
 export default function TitleEffect({ children }) {
   const canvasRef = useRef(null)
@@ -135,9 +134,9 @@ export default function TitleEffect({ children }) {
   }, [])
 
   return (
-    <div className={styles.titleEffectRoot} ref={containerRef}>
+    <div className="relative w-full h-auto" ref={containerRef}>
       {children}
-      <canvas ref={canvasRef} className={styles.effectCanvas} />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-0 mix-blend-screen opacity-95 pointer-events-auto" />
     </div>
   )
 }
