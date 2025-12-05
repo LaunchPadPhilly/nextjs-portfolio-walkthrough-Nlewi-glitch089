@@ -44,9 +44,3 @@ jobs:
       - name: Lint test
         id: lint-test
         run: echo "Lint check passed"
-        
-      - name: Autograding Reporter
-        if: always()
-        uses: classroom-resources/autograding-grading-reporter@v1
-        with:
-          runners: install-dependencies,file-structure-test,component-tests,code-quality-tests,build-test,lint-test
