@@ -60,12 +60,11 @@ export default function TitleEffect({ children }) {
       const my = mouseRef.current.y * height
 
       blobs.forEach((b) => {
-        // apply subtle attraction to mouse
+        // apply very subtle attraction to mouse (reduced to avoid strong hover highlight)
         const dx = mx - b.x * width
         const dy = my - b.y * height
-        // stronger attraction to the pointer for more visible morphing
-        b.vx += (dx / Math.max(width, 400)) * 0.0025
-        b.vy += (dy / Math.max(height, 400)) * 0.0025
+        b.vx += (dx / Math.max(width, 600)) * 0.0006
+        b.vy += (dy / Math.max(height, 600)) * 0.0006
 
         // damp and move
         b.vx *= 0.96
@@ -93,20 +92,8 @@ export default function TitleEffect({ children }) {
         ctx.fill()
       })
 
-      // Now mask the blob layer to the text glyphs: keep only pixels inside text
-      if (text) {
-        ctx.save()
-        ctx.globalCompositeOperation = 'destination-in'
-        ctx.fillStyle = 'rgba(255,255,255,1)'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.font = textFont
-        // draw text centered in the canvas area
-        const x = width / 2
-        const y = height / 2
-        ctx.fillText(text, x, y)
-        ctx.restore()
-      }
+      // We intentionally do not mask to text anymore — the canvas now provides a subtle
+      // decorative background behind the heading rather than re-highlighting the name.
 
       rafRef.current = requestAnimationFrame(draw)
     }
@@ -134,9 +121,9 @@ export default function TitleEffect({ children }) {
   }, [])
 
   return (
-    <div className="relative w-full h-auto" ref={containerRef}>
+    <div className="title-effect" ref={containerRef}>
       {children}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-0 mix-blend-screen opacity-95 pointer-events-auto" />
+      <canvas ref={canvasRef} className="title-canvas" />
     </div>
   )
 }

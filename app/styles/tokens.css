@@ -1,0 +1,27 @@
+/* Design tokens — single source of truth */
+:root {
+  --bg: #0d0f14;
+  --surface: #13161d;
+  --border: #1f2330;
+  --text: #e8eaf0;
+  --muted: #6b7280;
+  --accent: #c084fc; /* purple — primary brand */
+  --accent2: #34d399; /* green — skills/tags */
+  --accent3: #f472b6; /* pink — featured/special */
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+/* Backwards-compatible aliases (existing modules expect these) */
+:root {
+  --accent-cyan: var(--accent2);
+  --accent-magenta: var(--accent3);
+  --accent-purple: var(--accent);
+  --foreground: var(--text);
+  --glass: rgba(255,255,255,0.03);
+  --glass-strong: rgba(255,255,255,0.06);
+  --radius: var(--radius-md);
+}
