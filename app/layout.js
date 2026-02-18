@@ -2,6 +2,7 @@ import './globals.css'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ClientParallaxWrapper from './components/ClientParallaxWrapper'
+import ScrollReveal from './components/ScrollReveal'
 
 export const metadata = {
   title: 'My Portfolio',
@@ -11,17 +12,19 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="min-h-screen flex flex-col">
+      <body className="app-root">
         {/* animated background layers (client) */}
         <ClientParallaxWrapper />
 
         <Navbar />
 
-        <main className="flex-1">
+        <main>
           {children}
         </main>
 
         <Footer />
+
+        <ScrollReveal />
       </body>
     </html>
   )
