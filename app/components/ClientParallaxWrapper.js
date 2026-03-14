@@ -10,6 +10,7 @@ export default function ClientParallaxWrapper() {
     <>
       <div className="cosmic-bg" aria-hidden="true" ref={cosmicRef}>
         <div className="gradient" />
+        <div className="strata-lines" />
         <div className="nebula" />
         <div className="stars" />
       </div>

@@ -73,78 +73,7 @@ export default function Parallax({ cosmicRef }) {
     window.addEventListener('mousemove', onMouse)
     document.addEventListener('visibilitychange', onVisibility)
 
-    // shooting stars / particles
-    let starInterval = null
-    function spawnShootingStar() {
-      if (!cosmic || !active) return
-      const w = window.innerWidth
-      const h = window.innerHeight
-      // start near right-top quadrant to sweep left-down
-      const startX = Math.random() * (w * 0.8) + w * 0.1
-      const startY = Math.random() * (h * 0.4)
-      const lenX = (Math.random() * 800) + 400 // horizontal travel
-      const lenY = (Math.random() * 300) + 200 // vertical travel
-      const duration = (Math.random() * 700) + 900 // ms
-
-      const el = document.createElement('div')
-      el.className = 'shooting-star trail'
-      el.style.left = `${startX}px`
-      el.style.top = `${startY}px`
-      el.style.width = `${Math.min(320, lenX / 3)}px`
-      el.style.setProperty('--dx', `-${lenX}px`)
-      el.style.setProperty('--dy', `-${lenY}px`)
-      el.style.animation = `shoot ${duration}ms linear both`
-      // color trail variations
-      el.style.background = `linear-gradient(90deg, rgba(255,255,255,1), rgba(${Math.floor(255*Math.random())},${Math.floor(50+200*Math.random())},${Math.floor(150+100*Math.random())},0.9), transparent)`
-      cosmic.appendChild(el)
-      // small particle burst at start
-      const parts = 3 + Math.floor(Math.random() * 4)
-      for (let i=0;i<parts;i++) {
-        const p = document.createElement('div')
-        p.className = 'particle'
-        const px = startX + (Math.random()-0.5)*30
-        const py = startY + (Math.random()-0.5)*30
-        p.style.left = `${px}px`
-        p.style.top = `${py}px`
-        p.style.background = `rgba(${200+Math.floor(Math.random()*55)},${50+Math.floor(Math.random()*200)},${150+Math.floor(Math.random()*100)},${0.9 - Math.random()*0.4})`
-        const pd = 800 + Math.floor(Math.random()*700)
-        p.style.transition = `transform ${pd}ms cubic-bezier(.2,.9,.2,1), opacity ${pd}ms linear`
-        cosmic.appendChild(p)
-        // trigger particle movement
-        requestAnimationFrame(() => {
-          p.style.transform = `translate3d(${(Math.random()-0.5)*200}px, ${(Math.random()-0.5)*200}px, 0) scale(${0.4+Math.random()*0.9})`
-          p.style.opacity = '0'
-        })
-        setTimeout(() => { try { p.remove() } catch(e){} }, pd + 80)
-      }
-
-      setTimeout(() => { try { el.remove() } catch(e){} }, duration + 80)
-    }
-
-    function startStarInterval() {
-      if (starInterval) return
-      starInterval = setInterval(() => {
-        // spawn with random chance and variable timing when active
-        if (active && Math.random() > 0.35) spawnShootingStar()
-      }, 1200 + Math.random()*2200)
-    }
-
-    function stopStarInterval() {
-      if (starInterval) {
-        clearInterval(starInterval)
-        starInterval = null
-      }
-    }
-
-    // toggle interval based on activity
-    const activityObserver = new MutationObserver(() => {
-      if (cosmic && cosmic.classList.contains('active')) startStarInterval()
-      else stopStarInterval()
-    })
-    if (cosmic) activityObserver.observe(cosmic, { attributes: true, attributeFilter: ['class'] })
-
-    // start initially if already active
-    if (cosmic && cosmic.classList.contains('active')) startStarInterval()
+    // Stable lines effect replaces transient shooting stars — no runtime spawns.
 
     // cleanup
     return () => {
@@ -154,9 +83,7 @@ export default function Parallax({ cosmicRef }) {
       if (hero) io.unobserve(hero)
       io.disconnect()
       if (raf) cancelAnimationFrame(raf)
-      // cleanup intervals and observers
-      try { if (starInterval) clearInterval(starInterval) } catch(e) {}
-      try { if (activityObserver) activityObserver.disconnect() } catch(e) {}
+      // nothing more to cleanup for removed shooting-star logic
     }
   }, [cosmicRef])
 
