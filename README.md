@@ -23,35 +23,43 @@ Your portfolio will include:
 ### Prerequisites
 
 Make sure you have installed:
-- **Node.js** (v20 or higher) - [Download here](https://nodejs.org/)
-- **Git** - [Download here](https://git-scm.com/)
-- **VS Code** (recommended) - [Download here](https://code.visualstudio.com/)
+- **Node.js** (v20 or higher)
+- **Git**
+- **Docker** (recommended for running the full stack locally)
 
-### Installation Steps
+### Installation & local development
 
-1. **Accept the GitHub Classroom assignment**
-   - Click the assignment link provided by your instructor
-   - This creates your own copy of the starter code
+1. Clone the repository:
 
-2. **Clone your repository**
-   ```bash
-   git clone [your-repository-url]
-   cd week1-portfolio-starter
-   ```
+```bash
+git clone <your-repository-url>
+cd <repo-folder>
+```
 
-3. **Install dependencies**
-   ```bash
-   npm install
-   ```
+2. Install Node dependencies:
 
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
+```bash
+npm ci
+```
 
-5. **Open your browser**
-   - Navigate to [http://localhost:3000](http://localhost:3000)
-   - You should see the starter template!
+3. Start the development server (fast, local-only):
+
+```bash
+npm run dev
+```
+
+Then open http://localhost:3000
+
+### Run the full stack with Docker (recommended)
+
+This project includes a `docker-compose.yml` that starts a Postgres DB and the Next.js app. It also reads secret files from `./secrets/` when present.
+
+```bash
+# prepare ./secrets/database_url.txt (see SECRETS.md for details)
+docker compose up --build
+```
+
+The app will be available on port 3000 and the compose setup runs smoke checks and (optionally) migrations in CI.
 
 ## ✅ Requirements
 
@@ -113,6 +121,8 @@ week1-portfolio-starter/
 └── README.md                # You're reading this!
 ```
 
+For a high-level architecture diagram and explanation, see `ARCHITECTURE.md` (includes a visual sketch at `screenshots/architecture-sketch.png`).
+
 ## 🎨 Design Guidelines
 
 ### Color Palette Ideas
@@ -147,47 +157,46 @@ Choose one and customize:
 
 ## 🧪 Testing Your Work
 
-Run the automated tests:
+Run the automated tests locally with Vitest:
 
 ```bash
 npm test
 ```
 
-This checks:
-- ✅ All 4 pages exist and load
-- ✅ Navigation component exists
-- ✅ Footer component exists
-- ✅ Link components used (not `<a>` tags)
-- ✅ Image components used (not `<img>` tags)
-- ✅ No console errors
+What the tests check (high level):
+- Page files and layout
+- Use of `next/link` and `next/image` where required
+- Basic content and structure expected by the course tests
 
-## 🚢 Deployment Instructions
+CI: GitHub Actions runs the same smoke/tests on push. See `.github/workflows/ci.yml`.
 
-### Step 1: Push to GitHub
+## 🚢 Deployment & CI
+
+### Push to GitHub
+
+Commit and push your changes as normal. The repository contains a GitHub Actions workflow (see `.github/workflows/ci.yml`) that runs smoke tests and optional Docker-based checks on `main` and `develop`.
 
 ```bash
-# Save your work
 git add .
-git commit -m "Complete portfolio project"
+git commit -m "Describe changes"
 git push
 ```
 
-### Step 2: Deploy to Vercel
+### Deploy to Vercel (optional)
 
-1. Go to [vercel.com](https://vercel.com)
-2. Sign up/Login with GitHub
-3. Click "New Project"
-4. Import your `week1-portfolio-starter` repository
-5. Click "Deploy"
-6. Wait 2-3 minutes
-7. 🎉 Your site is live!
+1. Go to vercel.com and import the GitHub repository
+2. Configure environment variables (e.g., `DATABASE_URL`, `NEXTAUTH_SECRET`) if you intend to connect a production DB
+3. Deploy and wait for the build to complete
 
-### Step 3: Submit Your Work
+### Notes about CI and secrets
 
-Submit the following in the assignment:
-1. ✅ Your GitHub repository URL
-2. ✅ Your live Vercel deployment URL
-3. ✅ Screenshot of your homepage
+- CI uses repository secrets or `POSTGRES_*` variables to run database-backed smoke tests. See `.github/workflows/ci.yml` for details.
+- For local Docker runs, the repository includes helper files under `./secrets/` (not committed in production). See `SECRETS.md`.
+
+### Submit Your Work
+
+- Provide your GitHub repo URL and (if applicable) deployed site URL
+- Include any required screenshots requested by your instructor
 
 ## 📖 Resources
 

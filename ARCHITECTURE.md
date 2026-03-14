@@ -1,79 +1,68 @@
 # Architecture Overview
 
-This document is a living template to help contributors and agents rapidly understand the codebase structure, key components, data flows, and operational considerations. Update this file as the project evolves.
+This document describes the current project layout and runtime architecture. The repository is a Next.js application (App Router) that uses Prisma and PostgreSQL for persistence, and includes Docker tooling and GitHub Actions CI for testing and smoke checks.
 
-Last updated: 2026-02-27
+Last updated: 2026-03-13
 
-## 1. Project Structure
+## 1. Project Structure (high level)
 
-The repository is primarily a full-stack Next.js application with Prisma for data persistence and Docker tooling for local development and deployment.
+Top-level files and folders you will find in this repository:
 
-[Project Root]/
-- App-Features.md
-- BRANCHING-STRATEGY.md
-The repository is primarily a full-stack Next.js application that uses PostgreSQL for data persistence and Docker tooling for local development and deployment.
-- docker-compose.yml
-- package.json
-- scripts/sql/           # SQL migrations and baseline
-- README.md
-- ARCHITECTURE.md        # (this file)
-This document is a living template to help contributors and agents rapidly understand the codebase structure, key components, data flows, and operational considerations. Update this file as the project evolves.
-Notes:
-- The presence of `pages/` suggests Next.js for the UI and possibly server-side/API routes.
-This repository includes a minimal Next.js app plus a PostgreSQL service and a Docker Compose setup configured for reliable local development.
-- `Dockerfile` and `docker-compose.yml` provide containerized development and deployment patterns.
+- `app/` — Next.js App Router pages, layouts, and components (React)
+- `public/` — static assets
+- `prisma/` — Prisma schema and client generation
+- `scripts/` — helper scripts and test smoke scripts (e.g., `scripts/test/smoke.js`)
+- `secrets/` — example secret files used by `docker-compose` locally (not for production)
+- `.github/workflows/` — GitHub Actions CI workflows (CI/CD, autograding)
+- `Dockerfile`, `docker-compose.yml` — container and compose definitions for local/CI builds
+- `tests/` — automated tests used by the classroom validator (Vitest)
+
+This repository runs as a single Next.js app that talks to a Postgres database via Prisma. Docker Compose is provided for local integration testing and CI jobs.
 
 ## 2. High-Level System Diagram
 
 Text diagram (simple):
 
-[User] <--> [Next.js Frontend (pages/)] <--> [Server/API (Next.js API routes or separate Node service)] <--> [Postgres (Prisma)]
+![Architecture sketch](screenshots/architecture-sketch.png)
 
-Description: Handles business logic and data access. This can be implemented as Next.js API routes (inside `pages/api` if present) or as a separate Node/Express service. It accesses the primary PostgreSQL database directly using SQL or a lightweight DB client.
+Text version:
+
+[User Browser] <--> [Next.js App Router (React, server components)] <--> [Prisma Client] <--> [PostgreSQL (db service)]
+
+Notes:
+- The Next.js app serves UI and may include server-side logic that runs during rendering (server components). Prisma is the DB access layer.
+- Docker Compose wires the `app` service to a local `db` service for CI/local smoke checks.
 
 ## 3. Core Components
 
-### 3.1. Frontend
-Type: PostgreSQL (compatible with Neon or other hosted Postgres providers)
-Name: Web Application (Next.js)
+### 3.1. Frontend / App
 
-Key Schemas/Tables: users, sessions, any domain entities defined in the SQL baseline files under `scripts/sql/migrations`.
+Type: Next.js (App Router)
 
-Technologies: Next.js, React, HTML/CSS/JS
-Database Migrations (SQL baseline):
+Technologies: Next.js, React, Tailwind CSS (project uses Tailwind), client + server components
 
-Migrations are provided as SQL files under `scripts/sql/migrations` and applied idempotently by `scripts/apply_sql_migration_neon.sh`. To apply locally or to Neon, set `DATABASE_URL` and run the script.
+### 3.2. Database & ORM
 
-```bash
-export DATABASE_URL="postgresql://<user>:<pw>@<host>:5432/<db>"
-./scripts/apply_sql_migration_neon.sh
-```
+- Prisma schema is located at `prisma/schema.prisma` and the generated client is used by any server-side code.
+- Primary DB: PostgreSQL (configured via `DATABASE_URL` or per-`POSTGRES_*` secrets).
 
-Description: Handles business logic and data access. This can be implemented as Next.js API routes (inside `pages/api` if present) or as a separate Node/Express service. It uses Prisma to access the primary database.
+### 3.3. Dev / Ops scripts
 
-Technologies: Node.js, Next.js API routes or Node/Express, Prisma ORM
-
-Deployment: Docker container(s), or serverless functions (if using platform-specific deployment).
+- `scripts/test/smoke.js` — lightweight smoke script used by CI to verify the environment
+- `docker-entrypoint.sh` — reads secret files into environment variables and runs Prisma migrations / db push on container start
+- `docker-compose.yml` — local compose environment for db + app with secrets mounting
 
 ## 4. Data Stores
 
 ### 4.1. Primary Database
 
-Name: Application Database
+Name: Application Database (Postgres)
 
-Type: PostgreSQL (inferred from Prisma and common Docker Compose setups)
-
-Purpose: Stores application data such as users, application state, and domain models defined in `prisma/schema.prisma`.
-
-Key Schemas/Tables: (examples you should find in `prisma/schema.prisma`) users, sessions, any domain entities defined there.
+Purpose: Stores application data such as users, sessions, and domain models defined in `prisma/schema.prisma`.
 
 ### 4.2. Local Secrets / Files
 
-Name: Local secrets folder
-
-Type: Files (not committed)
-
-Purpose: Holds local plaintext helper files (e.g., `secrets/database_url.txt`). Keep this out of version control and use environment variables / secret managers in production.
+Local helper files are stored under `secrets/` for convenience in local/dev. These are **not** meant for production — use environment variables or a secret manager for production deployments. The `docker-entrypoint.sh` and `docker-compose.yml` read `secrets/*.txt` files and mount them into `/run/secrets/` within containers.
 
 ## 5. External Integrations / APIs
 
@@ -86,15 +75,12 @@ Integration method: REST APIs or vendor SDKs.
 
 ## 6. Deployment & Infrastructure
 
-Cloud Provider: Not specified in repo — deployment is cloud-agnostic.
+This project is cloud-agnostic. The repo includes:
 
-Key Services / Patterns:
-- Containerization: `Dockerfile` and `docker-compose.yml` for local development and production builds.
-- ORM: Prisma manages DB schema and migrations.
+- `Dockerfile` and `docker-compose.yml` for building the app and running an integrated local stack
+- GitHub Actions workflows under `.github/workflows/` (CI/CD). The `CI/CD` workflow runs smoke tests and optional docker-compose steps.
 
-CI/CD: No CI pipeline files were detected in the root listing. Recommended: GitHub Actions workflows or a Docker-based CI pipeline.
-
-Monitoring & Logging: Not present in repo — consider integrating tools like Prometheus, Grafana, or hosted solutions (Datadog, Sentry) depending on needs.
+Prisma migrations and schema generation are invoked in CI and via `docker-entrypoint.sh` when appropriate.
 
 ## 7. Security Considerations
 
@@ -105,33 +91,30 @@ Monitoring & Logging: Not present in repo — consider integrating tools like Pr
 
 ## 8. Development & Testing Environment
 
-Local Setup (quick steps):
+Quick start (local):
 
 1. Install Node.js and Docker.
-2. Copy or configure environment variables (example files in `secrets/` are local artifacts).
-3. Start DB and app via Docker Compose:
+2. Prepare a local `./secrets/database_url.txt` for compose, e.g. `postgresql://postgres:postgres@db:5432/appdb`.
+3. Start with Docker Compose:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
-4. Run app locally (if not using Docker):
+Or run the app without Docker:
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Database Migrations (Prisma):
+Testing:
 
 ```bash
-npx prisma migrate dev
-npx prisma generate
+npm test
 ```
 
-Testing Frameworks: Not present in the listing; common choices: Jest for JS/TS unit tests, Playwright or Cypress for E2E.
-
-Code Quality Tools: ESLint, Prettier, TypeScript (optional) recommended.
+The project uses Vitest for the course tests located in `tests/`.
 
 ## 9. Future Considerations / Roadmap
 
@@ -141,13 +124,13 @@ Code Quality Tools: ESLint, Prettier, TypeScript (optional) recommended.
 
 ## 10. Project Identification
 
-Project Name: BrightPath Pipeline
+Project: Next.js Portfolio Starter (classroom template)
 
-Repository URL: (insert repository URL)
+Repository: https://github.com/LaunchPadPhilly/nextjs-portfolio-walkthrough-Nlewi-glitch089
 
-Primary Contact/Team: Nakerra (Nikki)
+Primary Contact: Project owner in repository (see Git history)
 
-Date of Last Update: 2026-02-27
+Date of Last Update: 2026-03-13
 
 ## 11. Glossary / Acronyms
 
