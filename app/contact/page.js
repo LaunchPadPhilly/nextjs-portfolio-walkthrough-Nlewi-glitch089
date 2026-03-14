@@ -3,7 +3,7 @@ export default function Contact() {
     <div className="site-container">
       <header style={{ marginBottom: '0.75rem' }}>
         <h1 style={{ fontSize: 'clamp(1.8rem,4.8vw,3rem)', fontWeight: 800 }}>Get In Touch</h1>
-        <div style={{ color: 'var(--accent2)', fontWeight: 600, marginTop: '0.5rem' }}>I'd love to connect and talk about new opportunities, collaborations, or anything tech-related. Reach out anytime through the channels below!</div>
+        <div style={{ color: 'var(--accent)', fontWeight: 600, marginTop: '0.5rem' }}>I&apos;d love to connect and talk about new opportunities, collaborations, or anything tech-related. Reach out anytime through the channels below!</div>
       </header>
 
       <div className="grid-two">
@@ -52,7 +52,7 @@ export default function Contact() {
 
           <div className="card">
             <div style={{ fontWeight: 800, color: 'var(--accent2)', marginBottom: '0.5rem' }}>Why Connect?</div>
-            <p style={{ fontSize: '1.03rem', color: 'var(--foreground)', lineHeight: 1.72 }}>If you have an idea for a project, a collaboration, or want feedback on a prototype, I'd love to hear from you.</p>
+            <p style={{ fontSize: '1.03rem', color: 'var(--foreground)', lineHeight: 1.72 }}>If you have an idea for a project, a collaboration, or want feedback on a prototype, I&apos;d love to hear from you.</p>
           </div>
         </aside>
       </div>

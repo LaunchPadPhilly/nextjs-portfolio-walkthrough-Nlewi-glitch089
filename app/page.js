@@ -12,7 +12,7 @@ export default function Home() {
             </TitleEffect>
           </div>
 
-          <div className="lead reveal">Creative Developer Building Meaningful Digital Experiences</div>
+          <div className="lead reveal">Software Engineer Building Meaningful Digital Experiences</div>
 
           <div className="card reveal" style={{ marginTop: '1rem' }}>
             <p style={{ color: 'var(--foreground)', fontSize: '1.03rem' }}>
@@ -20,7 +20,7 @@ export default function Home() {
             </p>
 
             <div style={{ marginTop: '0.75rem', color: '#b6b6c8' }}>
-              <strong>Focused on:</strong> UI/UX Design · Front-End Development · Interactive Media
+              <strong>Focused on:</strong> Software Engineering · Front-End Development · Interactive Media
             </div>
 
             <div style={{ marginTop: '1rem' }}>
@@ -34,7 +34,7 @@ export default function Home() {
         <aside>
           <div className="featured-card reveal">
             <div style={{ color: 'var(--accent3)', fontWeight: 700 }}>Featured</div>
-            <div style={{ fontWeight: 800, color: 'var(--foreground)', fontSize: '1.05rem' }}>Creator + Developer</div>
+            <div style={{ fontWeight: 800, color: 'var(--foreground)', fontSize: '1.05rem' }}>Software Engineer</div>
             <p style={{ marginTop: '0.5rem', color: '#b6b6c8' }}>Focused on accessible interactions and delightful micro-interactions. Currently exploring real-time collaboration and generative UI patterns.</p>
           </div>
 

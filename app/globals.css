@@ -157,6 +157,161 @@ a:focus {
   animation: slowPan 30s linear infinite;
 }
 
+/* Stable, uniform strata lines overlay (subtle scanlines) */
+.cosmic-bg .strata-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.12; /* slightly stronger so effect is visible on dark pages */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.05) 0px,
+    rgba(255,255,255,0.05) 1px,
+    transparent 1px,
+    transparent 16px
+  );
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  animation: slowPan 40s linear infinite;
+}
+
+/* Card-specific pill spacing + hover to make badges feel interactive */
+.card .pill {
+  margin-right: 0.75rem;
+  margin-bottom: 0.6rem;
+  display: inline-flex;
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms ease, filter 220ms ease;
+  cursor: default;
+}
+.card .pill:hover, .card .pill:focus {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 20px 60px rgba(161,75,255,0.10), 0 6px 24px rgba(0,240,255,0.06);
+  filter: saturate(125%);
+}
+
+/* Skill badges (About page) */
+.skill-badge {
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: var(--foreground);
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms ease, filter 220ms ease, background 220ms ease;
+  cursor: pointer;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+.skill-badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent3));
+  display: inline-block;
+  transform: translateY(0.5px);
+}
+.skill-badge:hover, .skill-badge:focus {
+  transform: translateY(-6px) scale(1.04);
+  box-shadow: 0 28px 80px rgba(0,240,255,0.08), 0 12px 46px rgba(161,75,255,0.06);
+  filter: saturate(140%);
+  background: linear-gradient(90deg, rgba(0,240,255,0.03), rgba(161,75,255,0.03));
+}
+.skill-badge:focus {
+  outline: 3px solid rgba(0,240,255,0.12);
+  outline-offset: 4px;
+}
+.skill-badge[aria-pressed='true'] { /* support possible future toggles */
+  background: linear-gradient(90deg, rgba(0,240,255,0.06), rgba(161,75,255,0.04));
+}
+
+/* pop-in micro-interaction for skill badges (staggered via --delay) */
+@keyframes badgePop {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.skill-badge {
+  animation: badgePop 360ms cubic-bezier(.2,.9,.2,1) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* increase spacing between group title and badges to improve readability */
+.card > div > div > div {
+  margin-bottom: 0.45rem;
+}
+
+/* Card heading styling: centered and slightly larger as sub-headers */
+.card-heading {
+  font-weight: 800;
+  color: var(--accent2);
+  font-size: 1.15rem;
+  text-align: center;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+/* Circular avatar used in header; background-image set inline for flexibility */
+.whoami-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  box-shadow: 0 10px 38px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* skill wrap + tooltip */
+.skill-wrap {
+  position: relative;
+  display: inline-block;
+}
+.skill-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: rgba(6,6,10,0.92);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: #e6f7ff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 200ms cubic-bezier(.2,.9,.2,1);
+  z-index: 60;
+}
+.skill-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  background: rgba(6,6,10,0.92);
+  transform-origin: center;
+  transform: translateX(-50%) rotate(45deg);
+  border-left: 1px solid rgba(255,255,255,0.04);
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.skill-wrap:hover .skill-tooltip,
+.skill-wrap:focus-within .skill-tooltip {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+
 @keyframes drift {
   0% { transform: translate3d(-3%, -1.5%, 0) scale(1); }
   50% { transform: translate3d(3%, 1.5%, 0) scale(1.035); }

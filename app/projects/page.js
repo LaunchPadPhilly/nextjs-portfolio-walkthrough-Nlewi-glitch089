@@ -80,8 +80,8 @@ export default function Projects() {
 
       <div className="site-container" style={{ position: 'relative', zIndex: 10 }}>
         <header style={{ marginBottom: '0.5rem' }}>
-          <h1 style={{ fontSize: 'clamp(1.8rem,4.8vw,2.2rem)', fontWeight: 800, color: 'var(--foreground)' }}>My Projects</h1>
-          <p style={{ color: 'var(--accent2)', fontWeight: 600, marginTop: '0.5rem' }}>A look at what I&apos;ve built — and what&apos;s coming next.</p>
+          <h1 style={{ fontSize: 'clamp(1.8rem,4.8vw,3rem)', fontWeight: 800, color: 'var(--foreground)' }}>My Projects</h1>
+          <p style={{ color: 'var(--accent)', fontWeight: 600, marginTop: '0.5rem' }}>A look at what I&apos;ve built — and what&apos;s coming next.</p>
         </header>
 
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
