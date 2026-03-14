@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Projects() {
   const [filter, setFilter] = useState('All')
@@ -103,7 +104,7 @@ export default function Projects() {
             <div key={p.id} className="card reveal" style={{ minHeight: 320, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <div style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, position: 'relative', background: p.headerGradient }}>
                 {p.logo ? (
-                  <img src={p.logo} alt={`${p.title} logo`} style={{ width: 48, height: 48, objectFit: 'contain' }} />
+                  <Image src={p.logo} alt={`${p.title} logo`} width={48} height={48} style={{ objectFit: 'contain' }} />
                 ) : (
                   <span style={{ color: 'white', fontWeight: 800, fontSize: '1.05rem', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>{p.title}</span>
                 )}
