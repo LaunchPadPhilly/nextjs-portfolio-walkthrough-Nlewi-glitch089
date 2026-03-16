@@ -40,7 +40,7 @@ export default function Home() {
 
           <div className="card reveal" style={{ marginTop: '1rem' }}>
             <div style={{ fontWeight: 800, color: 'var(--accent2)', marginBottom: '0.5rem' }}>Featured Project</div>
-            <p style={{ color: '#b6b6c8' }}>PlayerLobby — an early prototype for coordinating local and online gaming hangouts with presence awareness and quick invites. Click to view the project or explore more on the Projects page.</p>
+            <p style={{ color: '#b6b6c8' }}>Nerd Street CRM — a donor relationship tool for nonprofits. It centralizes donors, donations, and engagement so teams stop relying on fragmented spreadsheets and manual follow-ups. Click to view the project or explore more on the Projects page.</p>
             <Link href="/projects" className="btn-primary" style={{ display: 'inline-block', marginTop: '0.75rem' }}>See Projects</Link>
           </div>
         </aside>

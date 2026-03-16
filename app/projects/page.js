@@ -1,69 +1,19 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import ProjectRecommender from '../components/ProjectRecommender'
 
 export default function Projects() {
   const [filter, setFilter] = useState('All')
 
-  // static project data
-  const projects = [
-    {
-      id: 'nextstep',
-      title: 'NextStep',
-      desc:
-        "A motivational goal-tracking app that helps users take small, actionable steps toward personal growth. Clean, encouraging UI built to promote daily progress.",
-      tech: ['HTML', 'CSS', 'JavaScript'],
-      categories: ['Web Apps'],
-      href: 'https://next-step-sandy.vercel.app',
-      headerGradient: 'linear-gradient(90deg,#ff2d95,#7c3aed)',
-      logo: null,
-    },
-    {
-      id: 'playerlobby',
-      title: 'PlayerLobby (Coming Soon)',
-      desc:
-        "A group hangout planner to help friends agree on activities, plan budgets, schedule meetups, and keep everyone on the same page — without the usual back-and-forth.",
-      tech: ['React.js', 'CSS'],
-      categories: ['Web Apps', 'In Progress'],
-      href: null,
-      headerGradient: 'linear-gradient(90deg,#7c3aed,#ec4899)',
-      logo: '/images/playerlobby-wireframe.svg',
-    },
-    {
-      id: 'more',
-      title: 'More Coming Soon',
-      desc: "I'm actively building new projects. Check back soon for updates.",
-      tech: [],
-      categories: ['In Progress'],
-      href: null,
-      headerGradient: 'linear-gradient(90deg,#6b7280,#111827)',
-      logo: null,
-    },
-    {
-      id: 'microlib',
-      title: 'Micro-Interaction Library',
-      desc: 'A collection of reusable, accessible micro-interactions and UI primitives focused on performance and delightful motion.',
-      tech: ['React', 'Animation'],
-      categories: ['Web Apps', 'In Progress'],
-      href: null,
-      headerGradient: 'linear-gradient(90deg,#0ea5a4,#7c3aed)',
-      logo: null,
-    },
-    {
-      id: 'dynlayout',
-      title: 'Dynamic Layout Engine',
-      desc: 'Experimenting with AI-driven UI patterns that adapt layouts based on content type and user context.',
-      tech: ['AI', 'Layout'],
-      categories: ['Research', 'In Progress'],
-      href: null,
-      headerGradient: 'linear-gradient(90deg,#22c55e,#06b6d4)',
-      logo: null,
-    },
-  ]
+  const [projects, setProjects] = useState([])
+  useEffect(() => {
+    fetch('/api/projects').then(r => r.json()).then(j => { if (j.projects) setProjects(j.projects) }).catch(() => {})
+  }, [])
 
-  const visibleProjects = projects.filter((p) => filter === 'All' || p.categories.includes(filter))
+  const visibleProjects = (projects || []).filter((p) => filter === 'All' || (p.categories || []).includes(filter))
 
   function handleNoLink(title) {
     if (typeof window !== 'undefined') {
@@ -84,6 +34,8 @@ export default function Projects() {
           <h1 style={{ fontSize: 'clamp(1.8rem,4.8vw,3rem)', fontWeight: 800, color: 'var(--foreground)' }}>My Projects</h1>
           <p style={{ color: 'var(--accent)', fontWeight: 600, marginTop: '0.5rem' }}>A look at what I&apos;ve built — and what&apos;s coming next.</p>
         </header>
+
+        <ProjectRecommender />
 
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
           {['All', 'Web Apps', 'In Progress'].map((f) => (
@@ -117,12 +69,31 @@ export default function Projects() {
                     <span key={t} className="pill" style={{ background: 'linear-gradient(90deg, rgba(0,240,255,0.06), rgba(161,75,255,0.04))' }}>{t}</span>
                   ))}
                 </div>
-                <div style={{ marginTop: 'auto' }}>
+                <div style={{ marginTop: 'auto', display: 'flex', gap: '0.5rem' }}>
                   {p.href ? (
                     <a href={p.href} target="_blank" rel="noreferrer" className="btn-primary">View Project</a>
                   ) : (
                     <button onClick={() => handleNoLink(p.title)} className="btn-ghost">View Project</button>
                   )}
+                  <button
+                    className="btn-ghost"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/explain', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ projectId: p.id }),
+                        })
+                        const data = await res.json()
+                        if (data.error) throw new Error(data.error)
+                        window.alert(data.explanation)
+                      } catch (err) {
+                        window.alert('Unable to fetch explanation: ' + err.message)
+                      }
+                    }}
+                  >
+                    Explain
+                  </button>
                 </div>
               </div>
             </div>

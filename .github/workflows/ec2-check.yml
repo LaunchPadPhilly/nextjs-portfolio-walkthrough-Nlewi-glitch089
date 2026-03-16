@@ -1,0 +1,32 @@
+name: EC2 Smoke Check
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  ec2-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run EC2 smoke test
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_PROTOCOL: ${{ secrets.EC2_PROTOCOL }}
+        run: |
+          if [ -z "$EC2_HOST" ]; then
+            echo "EC2_HOST not set — skipping EC2 smoke test." && exit 0
+          fi
+          echo "Pinging: $EC2_PROTOCOL://$EC2_HOST"
+          npm run test:ec2

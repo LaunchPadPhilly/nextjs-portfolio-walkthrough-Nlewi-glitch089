@@ -1,0 +1,63 @@
+[
+  {
+    "id": "nextstep",
+    "title": "NextStep",
+    "desc": "A motivational goal-tracking app that helps users take small, actionable steps toward personal growth. Clean, encouraging UI built to promote daily progress.",
+    "tech": ["HTML", "CSS", "JavaScript"],
+    "categories": ["Web Apps"],
+    "href": "https://next-step-sandy.vercel.app",
+    "headerGradient": "linear-gradient(90deg,#ff2d95,#7c3aed)",
+    "logo": null
+  },
+  {
+    "id": "nerdstreetcrm",
+    "title": "Nerd Street CRM",
+    "desc": "Nerd Street CRM is a donor relationship tool for nonprofits that centralizes donor records, donations, and engagement.",
+    "tech": ["React.js", "Postgres", "UX"],
+    "categories": ["Web Apps"],
+    "href": "https://nerd-street-crm.vercel.app",
+    "headerGradient": "linear-gradient(90deg,#7c3aed,#06b6d4)",
+    "logo": null
+  }
+,
+  {
+    "id": "playerlobby",
+    "title": "PlayerLobby (Coming Soon)",
+    "desc": "A community-first multiplayer lobby and matchmaking dashboard for players to find, join, and organize casual and competitive matches.",
+    "tech": ["React", "Node.js", "WebSockets"],
+    "categories": ["In Progress"],
+    "href": null,
+    "headerGradient": "linear-gradient(90deg,#ff7a18,#af002d)",
+    "logo": null
+  },
+  {
+    "id": "halo",
+    "title": "Halo (Coming Soon)",
+    "desc": "A lightweight analytics and presence tracker for live events and streamers — real-time viewer stats, chat highlights, and session summaries.",
+    "tech": ["Next.js", "Socket.IO", "Redis"],
+    "categories": ["In Progress"],
+    "href": null,
+    "headerGradient": "linear-gradient(90deg,#06b6d4,#7c3aed)",
+    "logo": null
+  },
+  {
+    "id": "echo-board",
+    "title": "EchoBoard (Coming Soon)",
+    "desc": "A small collaborative whiteboard and brainstorming tool for quick idea capture and lightweight team sketches.",
+    "tech": ["Canvas", "React", "Firebase"],
+    "categories": ["In Progress"],
+    "href": null,
+    "headerGradient": "linear-gradient(90deg,#ffb86b,#ff6b6b)",
+    "logo": null
+  },
+  {
+    "id": "clearcents",
+    "title": "ClearCents",
+    "desc": "Master your money as a student. Track income and expenses, understand your spending patterns, and get AI-powered insights to build healthier financial habits over time.",
+    "tech": ["Next.js", "Postgres", "Prisma", "OpenAI"],
+    "categories": ["Fintech", "Web Apps"],
+    "href": "https://clear-cents.vercel.app",
+    "headerGradient": "linear-gradient(90deg,#0ea5a4,#7c3aed)",
+    "logo": null
+  }
+]

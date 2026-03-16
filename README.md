@@ -123,6 +123,8 @@ week1-portfolio-starter/
 
 For a high-level architecture diagram and explanation, see `ARCHITECTURE.md` (includes a visual sketch at `screenshots/architecture-sketch.png`).
 
+Deployment docs: see `docs/SSH.md` for SSH-based deployment instructions and `docs/EC2.md` for EC2 smoke-check guidance.
+
 ## 🎨 Design Guidelines
 
 ### Color Palette Ideas

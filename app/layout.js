@@ -3,6 +3,7 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ClientParallaxWrapper from './components/ClientParallaxWrapper'
 import ScrollReveal from './components/ScrollReveal'
+import ChatWidget from './components/ChatWidget'
 
 export const metadata = {
   title: 'My Portfolio',
@@ -23,6 +24,8 @@ export default function RootLayout({ children }) {
         </main>
 
         <Footer />
+
+        <ChatWidget />
 
         <ScrollReveal />
       </body>

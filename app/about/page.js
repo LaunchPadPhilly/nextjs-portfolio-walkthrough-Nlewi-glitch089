@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import ProfileTriggerClient from '../components/ProfileTriggerClient'
 
 export default function About() {
   const skillGroups = [
@@ -106,15 +107,8 @@ export default function About() {
             <div style={{ position: 'absolute', inset: 0, borderRadius: '9999px', background: 'linear-gradient(90deg, var(--accent3), var(--accent), var(--accent2))', zIndex: 1, width: 'calc(100% + 6px)', height: 'calc(100% + 6px)', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }} />
             <div style={{ position: 'absolute', inset: 0, borderRadius: '9999px', background: 'radial-gradient(circle, rgba(161,75,255,0.12), rgba(0,240,255,0.06))', filter: 'blur(6px)', opacity: 0.22, width: 'calc(100% + 12px)', height: 'calc(100% + 12px)', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }} />
             <div style={{ position: 'relative', zIndex: 3, width: '100%', height: '100%', borderRadius: '9999px', overflow: 'hidden' }}>
-              <Image
-                src="/download.png"
-                alt="Nakerra Lewis"
-                fill
-                style={{ objectFit: 'cover' }}
-                priority
-                sizes="(max-width:720px) 72px, 88px"
-                quality={80}
-              />
+              {/* Client-side trigger so clicking the profile image opens admin */}
+              <ProfileTriggerClient src="/download.png" size={88} />
             </div>
           </div>
           <div>
@@ -155,7 +149,10 @@ export default function About() {
           <div className="card reveal">
             <div className="card-heading">My Journey</div>
             <p style={{ color: 'var(--foreground)', fontSize: '1.03rem', lineHeight: 1.72, fontWeight: 500 }}>
-              Over the past year, I&apos;ve been expanding my skills in real-world environments — including designing an app concept called Lemon-Aid to help teens build confidence and make new friends. I&apos;m currently working on PlayerLobby, a social platform for planning gaming hangouts, while leveling up my UI design and coding abilities through build-first learning.
+              Over the past year, I&apos;ve been expanding my skills in real-world environments — including designing an app concept called Lemon-Aid to help teens build confidence and make new friends. I&apos;m currently working on Nerd Street CRM, a donor relationship tool for nonprofits that helps teams track donors, donations, and engagement in a single actionable system.
+            </p>
+            <p style={{ color: 'var(--foreground)', fontSize: '1.03rem', lineHeight: 1.72, fontWeight: 500, marginTop: '0.6rem' }}>
+              Problem explained: nonprofits often juggle spreadsheets, email archives, and fragmented notes—losing sight of relationships, missing renewal windows, and burning out staff with manual administrative work. Nerd Street CRM aims to centralize donor data, streamline renewals, and surface opportunities for deeper engagement.
             </p>
           </div>
 

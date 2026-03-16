@@ -1,72 +1,35 @@
-Architecture Choice: Drop Tailwind for CSS Variables + Vanilla CSS (or CSS Modules if using React)
-Instead of Tailwind, this project uses:
+This repository uses Tailwind CSS for utility-first styling and also includes a small token CSS file for any global CSS custom-properties used alongside Tailwind.
 
-CSS custom properties (variables) for the design token system
-Vanilla CSS with a single stylesheet (or CSS Modules per component in React)
-No utility framework — every style is intentional and named
+Guiding rules for contributors and Copilot:
 
-Design tokens (put these in :root or a tokens.css file)
-css:root {
-  --bg: #0d0f14;
-  --surface: #13161d;
-  --border: #1f2330;
-  --text: #e8eaf0;
-  --muted: #6b7280;
-  --accent: #c084fc;       /* purple — primary brand */
-  --accent2: #34d399;      /* green — skills/tags */
-  --accent3: #f472b6;      /* pink — featured/special */
-  --font-display: 'Syne', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-}
-Always use these variables. Never hardcode colors or fonts directly.
+- Prefer Tailwind utility classes for layout and spacing. The project already includes Tailwind in dependencies and a `tailwind.config.js` file.
+- Use `tokens.css` for cross-cutting design tokens (colors, radii) that are referenced from global styles or components when a named variable is clearer than a long utility class.
+- Keep styles consistent: prefer `className` + Tailwind utilities in JSX, and extract repetitive combinations into component classes or Tailwind plugin utilities.
 
-Navigation Rules (fix the broken nav)
-The nav MUST handle both mobile and desktop cleanly.
-css/* Desktop: always show links */
-.nav-links { display: flex; }
+Navigation
 
-/* Mobile: hide links, show hamburger */
-@media (max-width: 680px) {
-  .nav-links { display: none; }
-  .nav-toggle { display: flex; }
-
-  /* When open (JS adds .open class) */
-  .nav-links.open {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 60px; left: 0; right: 0;
-    /* ... full-screen dropdown */
-  }
-}
-Copilot Rule: When adding nav items, ALWAYS check both desktop and mobile states. Never use display: none on .nav-links at desktop widths.
+The nav must work across breakpoints. Use Tailwind responsive utilities (e.g., `hidden md:flex` for links, and `md:hidden` for mobile toggles). When adding nav items, test both mobile and desktop layouts.
 
 Page Sections Checklist
-Every section must have:
 
- A section-label (small caps category name, e.g. "About")
- A section-title (the headline)
- A section-sub (a 1–2 sentence description)
- Actual content (grid, cards, list — not empty)
- A scroll reveal animation (add class reveal + IntersectionObserver)
+Every major section should include:
 
-If a section has a label but no content, it is not done. Don't leave empty sections.
+- a short label (category)
+- a clear title
+- a 1–2 sentence description
+- substantive content (cards, lists, examples)
+
+Optionally add a reveal animation (the repo includes a simple `reveal` pattern). Do not leave empty sections with only a heading.
 
 Component Patterns
-Project Cards
-html<a href="#" class="project-card">
-  <div class="project-icon">🎮</div>
-  <div class="project-meta">
-    <span class="project-tag">React</span>
-  </div>
-  <h3 class="project-title">Project Name</h3>
-  <p class="project-desc">Short description here.</p>
-  <span class="project-arrow">View Project →</span>
-</a>
-Always use <a> not <div> for cards that link somewhere.
+
+Project cards should be accessible links when they navigate. Prefer semantic markup:
+
+```jsx
+<a href="/projects/foo" className="project-card">...</a>
+```
+
+Use Tailwind classes for layout and spacing and keep components small and focused.
 Skill Items
 html<div class="skill-item">
   <span class="skill-name">UI/UX Design</span>
@@ -75,42 +38,33 @@ html<div class="skill-item">
 Tags / Badges
 html<span class="tag"><span class="dot"></span> Tag text</span>
 
-Scroll Reveal Animation
-Add this JS to the bottom of every page:
-javascriptconst observer = new IntersectionObserver((entries) => {
-  entries.forEach((e) => {
-    if (e.isIntersecting) e.target.classList.add('visible');
-  });
-}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+Scroll reveal
 
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-CSS:
-css.reveal {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
-}
-.reveal.visible {
-  opacity: 1;
-  transform: none;
-}
-Add class reveal to any element you want to animate in on scroll.
+The repo contains a simple `reveal` pattern used on several components. You can use the existing utility `reveal` + IntersectionObserver implementation included in `app/components/ScrollReveal.js`.
 
-Responsive Layout Rules
-BreakpointBehavior> 1100pxMax-width container, centered680px–1100pxMost grids go to 1–2 columns< 680pxSingle column, hamburger nav, full-width cards
-Use clamp() for fluid font sizes:
-cssfont-size: clamp(3.5rem, 10vw, 8rem); /* hero heading */
-font-size: clamp(2rem, 4vw, 3rem);    /* section titles */
+Responsive layout
 
-Things Copilot Must Never Do
+Use Tailwind responsive utilities to adapt the layout at `sm`, `md`, `lg`, `xl` breakpoints. Prefer container/capped widths for wide screens and single-column stacks for small screens.
 
-Never use Tailwind unless explicitly asked to add it back
-Never hardcode colors — use var(--accent) etc.
-Never leave a section with only a heading and no content
-Never use <div> for links — use <a>
-Never add a nav item without testing mobile breakpoint
-Never use Arial, Roboto, or Inter — use Syne + DM Sans (or update the token)
-Never add a new section without the 4-part structure (label, title, sub, content)
+Rules for Copilot / Contributors
+
+- Prefer Tailwind utilities and the project's token variables for consistent styling.
+- Avoid leaving empty sections or placeholder headings.
+- Use semantic HTML (use `<a>` for links, headings for titles).
+- Test navigation and layout at mobile and desktop breakpoints.
+
+File layout (Next.js)
+```
+/app
+  /components
+  /about
+  /projects
+  /contact
+  layout.js
+  page.js
+```
+
+When adding components, keep them focused and test with `npm run dev` and the test suite (`npm test`).
 
 
 File Structure (if converting to React/Next.js)
