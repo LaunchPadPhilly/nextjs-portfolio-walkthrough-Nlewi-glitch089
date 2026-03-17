@@ -172,6 +172,33 @@ What the tests check (high level):
 
 CI: GitHub Actions runs the same smoke/tests on push. See `.github/workflows/ci.yml`.
 
+### CI pipeline (GitHub Actions)
+
+This repository includes a compact CI pipeline that runs three focused jobs in sequence:
+
+- **Security Audit** — runs a lightweight `npm audit` to surface moderate+ vulnerabilities early.
+- **Build & Test** — installs dependencies and runs the test suite (Vitest) and optional Docker-backed smoke checks.
+- **Deploy to EC2** — an optional job that SSHes to your EC2 host, installs Docker if missing, and runs `docker compose up -d --build`.
+
+The deploy job uses the following GitHub repository secrets (add these under Settings → Secrets → Actions):
+
+- `EC2_HOST` — the public IP or DNS name of your EC2 instance.
+- `EC2_USER` — the SSH user for the instance (e.g., `ubuntu`).
+- `EC2_KEY` — the private key (PEM) contents used to SSH as `EC2_USER`.
+
+For safety the deploy job is designed to be triggered manually (`workflow_dispatch`) or only on `main` pushes. The job is idempotent and will install Docker/docker-compose if missing before attempting to start the app.
+
+If you prefer more secure key handling, consider supplying the private key with `webfactory/ssh-agent` or use an `ssh` agent rather than echoing a key file in the workflow.
+
+### Troubleshooting EC2 reachability
+
+If the CI EC2 smoke test fails with a connection timeout, run the included diagnostic on your host:
+
+1. Copy and run the one-shot diagnostic script included at `scripts/ec2-diagnose.sh` on your EC2 instance, or run the provided SSH one-liner from your workstation (see `.github/workflows/ci.yml` comments and the `scripts/` directory).
+2. Verify your security group allows inbound TCP on ports `22` (SSH) and `80` (HTTP) from the runner IPs or 0.0.0.0/0 (for public testing).
+3. Confirm `docker compose ps` shows the `app` service mapped as `0.0.0.0:80->3000/tcp` and that `curl -I http://localhost:3000` succeeds on the host.
+
+
 ## 🚢 Deployment & CI
 
 ### Push to GitHub
