@@ -38,17 +38,17 @@ jobs:
           # If REMOTE_DIR is not set, default to the user's home 'app' folder
           REMOTE_DIR=${REMOTE_DIR:-/home/$EC2_USER/app}
 
-          ssh -o StrictHostKeyChecking=yes "$EC2_USER@$EC2_HOST" "bash -lc '
+          ssh -o StrictHostKeyChecking=yes "$EC2_USER@$EC2_HOST" "REMOTE_DIR='$REMOTE_DIR' bash -lc '
             set -e
-            cd $REMOTE_DIR || mkdir -p $REMOTE_DIR && cd $REMOTE_DIR
+            cd "\$REMOTE_DIR" || { mkdir -p "\$REMOTE_DIR" && cd "\$REMOTE_DIR"; }
             if [ -d .git ]; then
               git fetch --all --prune
               git reset --hard origin/main
             else
-              git clone --depth=1 https://github.com/${{ github.repository }} $REMOTE_DIR
+              git clone --depth=1 https://github.com/${{ github.repository }} "\$REMOTE_DIR"
             fi
             npm ci --production
             npm run build
             # Restart process manager — adapt to your service manager
             pm2 restart all || sudo systemctl restart my-app.service || true
-          '"]
+          '"

@@ -192,8 +192,9 @@ jobs:
             echo "EC2 secrets missing (EC2_HOST and/or EC2_USER). Skipping EC2 deployment step."
             exit 0
           fi
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${EC2_USER}@${EC2_HOST} 'bash -s' <<'EOF'
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem "${EC2_USER}@${EC2_HOST}" "PROJECT_DIR='${PROJECT_DIR}' bash -s" <<'EOF'
           set -euo pipefail
+          : "${PROJECT_DIR:=/home/ubuntu/Portfolio}"
           # Install Docker if missing
           if ! command -v docker >/dev/null 2>&1; then
             sudo apt-get update -y
