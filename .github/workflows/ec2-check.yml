@@ -22,10 +22,15 @@ jobs:
 
       - name: Run EC2 smoke test
         env:
+          EC2_SMOKE_ENABLED: ${{ secrets.EC2_SMOKE_ENABLED }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_PROTOCOL: ${{ secrets.EC2_PROTOCOL }}
           EC2_PORT: ${{ secrets.EC2_PORT }}
         run: |
+          if [ "${EC2_SMOKE_ENABLED:-false}" != "true" ]; then
+            echo "EC2_SMOKE_ENABLED is not true — skipping EC2 smoke test."
+            exit 0
+          fi
           if [ -z "$EC2_HOST" ]; then
             echo "EC2_HOST not set — skipping EC2 smoke test." && exit 0
           fi

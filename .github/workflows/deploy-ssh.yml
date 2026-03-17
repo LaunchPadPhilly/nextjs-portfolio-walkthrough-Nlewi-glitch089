@@ -59,6 +59,10 @@ jobs:
           else
             git clone --depth=1 "https://github.com/$REPO" "$REMOTE_DIR"
           fi
+          if ! command -v npm >/dev/null 2>&1; then
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+          fi
           npm ci --production
           npm run build
           pm2 restart all || sudo systemctl restart my-app.service || true
