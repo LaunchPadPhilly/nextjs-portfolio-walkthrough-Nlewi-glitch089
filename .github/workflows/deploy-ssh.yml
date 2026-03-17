@@ -57,7 +57,14 @@ jobs:
             git fetch --all --prune
             git reset --hard origin/main
           else
-            git clone --depth=1 "https://github.com/$REPO" "$REMOTE_DIR"
+            git init
+            if git remote get-url origin >/dev/null 2>&1; then
+              git remote set-url origin "https://github.com/$REPO"
+            else
+              git remote add origin "https://github.com/$REPO"
+            fi
+            git fetch --depth=1 origin main
+            git reset --hard FETCH_HEAD
           fi
           if ! command -v npm >/dev/null 2>&1; then
             curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
