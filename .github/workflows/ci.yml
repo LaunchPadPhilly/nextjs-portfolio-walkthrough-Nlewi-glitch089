@@ -6,15 +6,32 @@ on:
     branches: [main]
 
 jobs:
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run npm audit (low/med)
+        run: |
+          npm audit --audit-level=moderate || true
+
   build-and-test:
+    needs: security-audit
     runs-on: ubuntu-latest
     env:
-      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
+      POSTGRES_USER: ${{ secrets['POSTGRES_USER'] }}
+      POSTGRES_PASSWORD: ${{ secrets['POSTGRES_PASSWORD'] }}
+      POSTGRES_DB: ${{ secrets['POSTGRES_DB'] }}
+      DATABASE_URL: ${{ secrets['DATABASE_URL'] }}
+      NEXTAUTH_SECRET: ${{ secrets['NEXTAUTH_SECRET'] }}
+      NEXTAUTH_URL: ${{ secrets['NEXTAUTH_URL'] || 'http://localhost:3000' }}
       # Automatically enable Docker services when running on github.com (real Actions).
       # Keep disabled by default for local Act runs to avoid requiring docker socket.
       RUN_DOCKER_SERVICES: ${{ github.server_url == 'https://github.com' && 'true' || 'false' }}
@@ -150,8 +167,54 @@ jobs:
         if: ${{ always() && env.RUN_DOCKER_SERVICES == 'true' }}
         run: docker compose down -v
 
-  # deploy job removed: on-prem/EC2 SSH deployment was removed from this
-  # workflow to simplify local development and avoid accidental SSH steps
-  # during CI runs. If you need a deploy step in future, see README.md
-  # for a suggested implementation snippet.
+ 
+  setup-ec2-docker:
+    name: Setup EC2 Docker & Start App
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write EC2 private key
+        run: |
+          echo "${{ secrets['EC2_KEY'] }}" > ec2_key.pem
+          chmod 600 ec2_key.pem
+
+      - name: Install Docker on EC2 and start compose
+        env:
+          EC2_HOST: ${{ secrets['EC2_HOST'] }}
+          EC2_USER: ${{ secrets['EC2_USER'] }}
+          PROJECT_DIR: /home/ubuntu/Portfolio
+        run: |
+          if [ -z "${EC2_HOST:-}" ] || [ -z "${EC2_USER:-}" ]; then
+            echo "EC2 secrets missing (EC2_HOST and/or EC2_USER). Skipping EC2 deployment step."
+            exit 0
+          fi
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${EC2_USER}@${EC2_HOST} 'bash -s' <<'EOF'
+          set -euo pipefail
+          # Install Docker if missing
+          if ! command -v docker >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y ca-certificates curl gnupg lsb-release
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sudo sh get-docker.sh
+            rm get-docker.sh
+            sudo usermod -aG docker "$(whoami)" || true
+            sudo systemctl enable --now docker
+          fi
+          # Ensure docker compose plugin
+          if ! docker compose version >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y docker-compose-plugin || true
+          fi
+          # If project directory exists, pull and start compose
+          if [ -d "${PROJECT_DIR}" ]; then
+            cd "${PROJECT_DIR}"
+            sudo docker compose pull || true
+            sudo docker compose up -d --build || true
+          fi
+          EOF
+
 
