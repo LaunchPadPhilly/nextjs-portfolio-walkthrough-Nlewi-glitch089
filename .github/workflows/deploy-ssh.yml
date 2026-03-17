@@ -21,34 +21,27 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y rsync
 
       - name: Add SSH key and known hosts
+        if: ${{ secrets.EC2_USER != '' && secrets.EC2_HOST != '' && secrets.EC2_KEY != '' }}
         env:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_KEY: ${{ secrets.EC2_KEY }}
         run: |
-          if [ -z "$EC2_USER" ] || [ -z "$EC2_HOST" ] || [ -z "$EC2_KEY" ]; then
-            echo "EC2 deploy secrets missing (EC2_USER, EC2_HOST, or EC2_KEY). Skipping deploy workflow."
-            exit 0
-          fi
           mkdir -p ~/.ssh
-          echo "$EC2_KEY" > ~/.ssh/id_rsa
+          printf '%s' "$EC2_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || echo "Warning: ssh-keyscan failed; continuing"
 
       - name: Deploy via SSH (pull & build on host)
+        if: ${{ secrets.EC2_USER != '' && secrets.EC2_HOST != '' && secrets.EC2_KEY != '' }}
         env:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
           REMOTE_DIR: ${{ secrets.EC2_PROJECT_PATH }}
         run: |
-          if [ -z "$EC2_USER" ] || [ -z "$EC2_HOST" ]; then
-            echo "EC2_USER or EC2_HOST secret is not set. Skipping deploy."
-            exit 0
-          fi
-          # If REMOTE_DIR is not set, default to the user's home 'app' folder
           REMOTE_DIR=${REMOTE_DIR:-/home/$EC2_USER/app}
 
-          ssh -o StrictHostKeyChecking=yes "$EC2_USER@$EC2_HOST" REMOTE_DIR="$REMOTE_DIR" REPO="${{ github.repository }}" bash -s << 'ENDSSH'
+          ssh -o StrictHostKeyChecking=accept-new "$EC2_USER@$EC2_HOST" REMOTE_DIR="$REMOTE_DIR" REPO="${{ github.repository }}" bash -s << 'ENDSSH'
           set -euo pipefail
           REMOTE_DIR=${REMOTE_DIR:-/home/ubuntu/app}
           mkdir -p "$REMOTE_DIR"
