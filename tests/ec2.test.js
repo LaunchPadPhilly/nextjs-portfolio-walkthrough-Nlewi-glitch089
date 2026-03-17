@@ -17,7 +17,8 @@ describe('EC2 Smoke Check', () => {
     { timeout: 30_000 },
     async () => {
       const protocol = process.env.EC2_PROTOCOL || 'http'
-      const url = `${protocol}://${host}`
+      const port = process.env.EC2_PORT
+      const url = `${protocol}://${host}${port ? `:${port}` : ''}`
       const res = await fetch(url, { cache: 'no-store' })
       expect(res.ok, `Expected ${url} to return 2xx`).toBe(true)
     }

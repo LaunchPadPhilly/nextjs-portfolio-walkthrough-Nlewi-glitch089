@@ -35,20 +35,25 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           REMOTE_DIR: ${{ secrets.EC2_REMOTE_DIR }}
         run: |
+          if [ -z "$EC2_USER" ] || [ -z "$EC2_HOST" ]; then
+            echo "ERROR: EC2_SSH_USER or EC2_HOST secret is not set."
+            exit 1
+          fi
           # If REMOTE_DIR is not set, default to the user's home 'app' folder
           REMOTE_DIR=${REMOTE_DIR:-/home/$EC2_USER/app}
 
-          ssh -o StrictHostKeyChecking=yes "$EC2_USER@$EC2_HOST" "REMOTE_DIR='$REMOTE_DIR' bash -lc '
-            set -e
-            cd "\$REMOTE_DIR" || { mkdir -p "\$REMOTE_DIR" && cd "\$REMOTE_DIR"; }
-            if [ -d .git ]; then
-              git fetch --all --prune
-              git reset --hard origin/main
-            else
-              git clone --depth=1 https://github.com/${{ github.repository }} "\$REMOTE_DIR"
-            fi
-            npm ci --production
-            npm run build
-            # Restart process manager — adapt to your service manager
-            pm2 restart all || sudo systemctl restart my-app.service || true
-          '"
+          ssh -o StrictHostKeyChecking=yes "$EC2_USER@$EC2_HOST" REMOTE_DIR="$REMOTE_DIR" REPO="${{ github.repository }}" bash -s << 'ENDSSH'
+          set -euo pipefail
+          REMOTE_DIR=${REMOTE_DIR:-/home/ubuntu/app}
+          mkdir -p "$REMOTE_DIR"
+          cd "$REMOTE_DIR"
+          if [ -d .git ]; then
+            git fetch --all --prune
+            git reset --hard origin/main
+          else
+            git clone --depth=1 "https://github.com/$REPO" "$REMOTE_DIR"
+          fi
+          npm ci --production
+          npm run build
+          pm2 restart all || sudo systemctl restart my-app.service || true
+          ENDSSH
