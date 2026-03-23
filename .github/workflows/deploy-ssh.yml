@@ -9,7 +9,7 @@ jobs:
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Check Prerequisites
         uses: appleboy/ssh-action@v1.0.3
@@ -73,7 +73,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           port: 22
           timeout: 30s
-          command_timeout: 20m
+          command_timeout: 30m
           request_pty: true
           script: |
             set -euxo pipefail
@@ -94,7 +94,7 @@ jobs:
               sudo npm install -g pm2
             fi
             echo "[build] installing dependencies..."
-            npm ci --no-audit --no-fund
+            npm ci --verbose --no-audit --no-fund
             echo "[build] building Next.js app..."
             npm run build
             echo "[build] done $(date -u +%Y-%m-%dT%H:%M:%SZ)"
