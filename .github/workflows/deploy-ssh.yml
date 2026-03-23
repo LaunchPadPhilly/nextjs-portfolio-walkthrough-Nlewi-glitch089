@@ -17,15 +17,19 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           port: 22
           timeout: 30s
-          command_timeout: 30m
+          command_timeout: 45m
+          request_pty: true
           script: |
-            set -euo pipefail
+            set -euxo pipefail
+            export DEBIAN_FRONTEND=noninteractive
             REMOTE_DIR="${{ secrets.EC2_PROJECT_PATH }}"
             REMOTE_DIR="${REMOTE_DIR:-/home/$(whoami)/app}"
             REPO="${{ github.repository }}"
             CURRENT_USER="$(whoami)"
+            echo "[deploy] start $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "[deploy] target user=$CURRENT_USER dir=$REMOTE_DIR"
 
-            # ── 1. Docker ────────────────────────────────────────────────
+            echo "[deploy] step 1/6: docker check"
             if ! command -v docker &>/dev/null; then
               sudo apt-get update -y
               sudo apt-get install -y docker.io docker-compose-v2
@@ -38,19 +42,19 @@ jobs:
               sudo apt-get install -y docker-compose-plugin || true
             fi
 
-            # ── 2. Node.js ────────────────────────────────────────────────
+            echo "[deploy] step 2/6: node/npm check"
             if ! command -v npm &>/dev/null; then
               curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
               sudo apt-get install -y nodejs
             fi
 
-            # ── 3. PM2 (install + configure auto-start on reboot) ─────────
+            echo "[deploy] step 3/6: pm2 check"
             if ! command -v pm2 &>/dev/null; then
               sudo npm install -g pm2
               sudo env PATH="$PATH" pm2 startup systemd -u "$CURRENT_USER" --hp "$HOME" || true
             fi
 
-            # ── 4. Clone or pull repo ─────────────────────────────────────
+            echo "[deploy] step 4/6: sync repository"
             mkdir -p "$REMOTE_DIR"
             cd "$REMOTE_DIR"
             if [ -d .git ]; then
@@ -67,11 +71,12 @@ jobs:
               git reset --hard FETCH_HEAD
             fi
 
-            # ── 5. Install deps & build ───────────────────────────────────
-            npm ci
+            echo "[deploy] step 5/6: install and build"
+            npm ci --no-audit --no-fund
             npm run build
 
-            # ── 6. Start or restart app via PM2 ──────────────────────────
+            echo "[deploy] step 6/6: restart app"
             pm2 restart portfolio 2>/dev/null \
               || pm2 start npm --name "portfolio" -- start
             pm2 save
+            echo "[deploy] done $(date -u +%Y-%m-%dT%H:%M:%SZ)"
