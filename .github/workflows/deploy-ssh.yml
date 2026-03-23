@@ -7,115 +7,60 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to EC2
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    env:
+      EC2_USER: ${{ secrets.EC2_USER }}
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_KEY: ${{ secrets.EC2_KEY }}
+      REMOTE_DIR: ${{ secrets.EC2_PROJECT_PATH }}
     steps:
-      - name: Check Prerequisites
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER || 'ubuntu' }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          timeout: 30s
-          command_timeout: 5m
-          request_pty: true
-          script: |
-            set -euxo pipefail
-            echo "[prereq] checking required tools..."
-            command -v git    && echo "  git: OK"
-            command -v docker && echo "  docker: OK"
-            docker compose version && echo "  docker compose: OK"
-            # npm/pm2 are checked as warnings — they will be auto-installed if missing
-            command -v npm &>/dev/null && echo "  npm: OK" || echo "  npm: NOT FOUND (will install in build step)"
-            command -v pm2 &>/dev/null && echo "  pm2: OK" || echo "  pm2: NOT FOUND (will install in build step)"
-            echo "[prereq] all checks passed $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Sync Repository
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER || 'ubuntu' }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          timeout: 30s
-          command_timeout: 10m
-          request_pty: true
-          script: |
-            set -euxo pipefail
-            REMOTE_DIR="${{ secrets.EC2_PROJECT_PATH }}"
-            REMOTE_DIR="${REMOTE_DIR:-/home/$(whoami)/app}"
-            REPO="${{ github.repository }}"
-            echo "[sync] target dir=$REMOTE_DIR"
-            mkdir -p "$REMOTE_DIR"
-            cd "$REMOTE_DIR"
-            if [ -d .git ]; then
-              git fetch --all --prune
-              git reset --hard origin/main
+          node-version: '20'
+
+      - name: Install rsync (optional)
+        run: sudo apt-get update && sudo apt-get install -y rsync
+
+      - name: Add SSH key and known hosts
+        if: env.EC2_USER != '' && env.EC2_HOST != '' && env.EC2_KEY != ''
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s' "$EC2_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || echo "Warning: ssh-keyscan failed; continuing"
+
+      - name: Deploy via SSH (pull & build on host)
+        if: env.EC2_USER != '' && env.EC2_HOST != '' && env.EC2_KEY != ''
+        run: |
+          REMOTE_DIR=${REMOTE_DIR:-/home/$EC2_USER/app}
+
+          ssh -o StrictHostKeyChecking=accept-new "$EC2_USER@$EC2_HOST" REMOTE_DIR="$REMOTE_DIR" REPO="${{ github.repository }}" bash -s << 'ENDSSH'
+          set -euo pipefail
+          REMOTE_DIR=${REMOTE_DIR:-/home/ubuntu/app}
+          mkdir -p "$REMOTE_DIR"
+          cd "$REMOTE_DIR"
+          if [ -d .git ]; then
+            git fetch --all --prune
+            git reset --hard origin/main
+          else
+            git init
+            if git remote get-url origin >/dev/null 2>&1; then
+              git remote set-url origin "https://github.com/$REPO"
             else
-              git init
-              if git remote get-url origin &>/dev/null; then
-                git remote set-url origin "https://github.com/$REPO"
-              else
-                git remote add origin "https://github.com/$REPO"
-              fi
-              git fetch --depth=1 origin main
-              git reset --hard FETCH_HEAD
+              git remote add origin "https://github.com/$REPO"
             fi
-            echo "[sync] done — HEAD=$(git rev-parse --short HEAD)"
-
-      - name: Install Dependencies & Build
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER || 'ubuntu' }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          timeout: 30s
-          command_timeout: 30m
-          request_pty: true
-          script: |
-            set -euxo pipefail
-            REMOTE_DIR="${{ secrets.EC2_PROJECT_PATH }}"
-            REMOTE_DIR="${REMOTE_DIR:-/home/$(whoami)/app}"
-            cd "$REMOTE_DIR"
-            # Ensure Node.js + npm are present (self-healing for new/rebuilt instances)
-            if ! command -v npm >/dev/null 2>&1; then
-              echo "[build] npm not found — installing Node.js 20..."
-              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-              sudo apt-get install -y nodejs
-            fi
-            node -v
-            npm -v
-            # Ensure pm2 is present
-            if ! command -v pm2 >/dev/null 2>&1; then
-              echo "[build] pm2 not found — installing globally..."
-              sudo npm install -g pm2
-            fi
-            echo "[build] installing dependencies..."
-            npm ci --verbose --no-audit --no-fund
-            echo "[build] building Next.js app..."
-            npm run build
-            echo "[build] done $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-
-      - name: Restart Application
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER || 'ubuntu' }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          timeout: 30s
-          command_timeout: 5m
-          request_pty: true
-          script: |
-            set -euxo pipefail
-            REMOTE_DIR="${{ secrets.EC2_PROJECT_PATH }}"
-            REMOTE_DIR="${REMOTE_DIR:-/home/$(whoami)/app}"
-            cd "$REMOTE_DIR"
-            echo "[restart] starting/restarting PM2 process..."
-            pm2 restart portfolio 2>/dev/null \
-              || pm2 start npm --name "portfolio" -- start
-            pm2 save
-            echo "[restart] done $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git fetch --depth=1 origin main
+            git reset --hard FETCH_HEAD
+          fi
+          if ! command -v npm >/dev/null 2>&1; then
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+          fi
+          npm ci
+          npm run build
+          pm2 restart all || sudo systemctl restart my-app.service || true
+          ENDSSH

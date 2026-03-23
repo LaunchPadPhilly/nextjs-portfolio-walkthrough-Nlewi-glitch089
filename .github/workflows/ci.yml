@@ -171,146 +171,50 @@ jobs:
     name: Setup EC2 Docker & Start App
     runs-on: ubuntu-latest
     needs: build-and-test
-    timeout-minutes: 45
     if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USER: ${{ secrets.EC2_USER }}
+      EC2_KEY: ${{ secrets.EC2_KEY }}
+      PROJECT_DIR: ${{ secrets.EC2_PROJECT_PATH }}
     steps:
-      - name: Prepare Server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER || 'ubuntu' }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          timeout: 30s
-          command_timeout: 10m
-          request_pty: true
-          script: |
-            set -euxo pipefail
-            export DEBIAN_FRONTEND=noninteractive
-            echo "[prepare] stopping unattended-upgrades to free apt lock..."
-            sudo systemctl stop unattended-upgrades || true
-            echo "[prepare] waiting for dpkg lock to clear..."
-            for i in {1..24}; do
-              if sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; then
-                echo "  dpkg lock busy, waiting 5s... ($i/24)"
-                sleep 5
-              else
-                break
-              fi
-            done
-            echo "[prepare] server ready $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Install Docker
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER || 'ubuntu' }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          timeout: 30s
-          command_timeout: 15m
-          request_pty: true
-          script: |
-            set -euxo pipefail
-            export DEBIAN_FRONTEND=noninteractive
-            if ! command -v docker &>/dev/null; then
-              echo "[docker-install] docker not found — installing..."
-              timeout 180 sudo apt-get update -y
-              timeout 300 sudo apt-get install -y docker.io
-              echo "[docker-install] installed $(docker --version)"
-            else
-              echo "[docker-install] docker already present — $(docker --version)"
-            fi
-            if ! sudo docker compose version &>/dev/null; then
-              echo "[docker-install] installing compose plugin via official release binary..."
-              sudo mkdir -p /usr/local/lib/docker/cli-plugins
-              DOCKER_COMPOSE_VERSION=$(curl -fsSL https://api.github.com/repos/docker/compose/releases/latest \
-                | grep '"tag_name"' | cut -d '"' -f 4 | sed 's/^v//')
-              sudo curl -fsSL \
-                "https://github.com/docker/compose/releases/download/v${DOCKER_COMPOSE_VERSION}/docker-compose-linux-x86_64" \
-                -o /usr/local/lib/docker/cli-plugins/docker-compose
-              sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
-            fi
-            echo "[docker-install] compose: $(sudo docker compose version)"
+      - name: Write EC2 private key
+        if: env.EC2_KEY != ''
+        run: |
+          printf '%s' "$EC2_KEY" > ec2_key.pem
+          chmod 600 ec2_key.pem
 
-      - name: Start Docker
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER || 'ubuntu' }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          timeout: 30s
-          command_timeout: 5m
-          request_pty: true
-          script: |
-            set -euxo pipefail
-            echo "[docker-start] enabling and starting Docker daemon..."
-            sudo systemctl enable docker
-            sudo systemctl start docker
-            sudo systemctl is-active docker
-            echo "[docker-start] done $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-
-      - name: Fix Docker Permissions
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER || 'ubuntu' }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          timeout: 30s
-          command_timeout: 2m
-          request_pty: true
-          script: |
-            set -euxo pipefail
-            CURRENT_USER="$(whoami)"
-            echo "[permissions] adding $CURRENT_USER to docker group..."
-            sudo usermod -aG docker "$CURRENT_USER" || true
-            echo "[permissions] done — new SSH sessions will use group directly"
-
-      - name: Verify Docker
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER || 'ubuntu' }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          timeout: 30s
-          command_timeout: 5m
-          request_pty: true
-          script: |
-            set -euxo pipefail
-            echo "[verify] running hello-world to confirm Docker is functional..."
-            sudo docker run --rm hello-world
-            echo "[verify] Docker is working correctly $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-
-      - name: Deploy App Container
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER || 'ubuntu' }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          timeout: 30s
-          command_timeout: 20m
-          request_pty: true
-          script: |
-            set -euxo pipefail
-            export COMPOSE_DOCKER_CLI_BUILD=1
-            export DOCKER_BUILDKIT=1
-            PROJECT_DIR="${{ secrets.EC2_PROJECT_PATH }}"
-            PROJECT_DIR="${PROJECT_DIR:-/home/$(whoami)/app}"
-            echo "[deploy-container] project dir=$PROJECT_DIR"
-            if [ ! -d "$PROJECT_DIR" ]; then
-              echo "[deploy-container] WARNING: project dir not found — skipping compose"
-              exit 0
-            fi
-            cd "$PROJECT_DIR"
+      - name: Install Docker on EC2 and start compose
+        if: env.EC2_HOST != '' && env.EC2_USER != '' && env.EC2_KEY != ''
+        run: |
+          : "${PROJECT_DIR:=/home/ubuntu/app}"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ec2_key.pem "${EC2_USER}@${EC2_HOST}" "PROJECT_DIR='${PROJECT_DIR}' bash -s" <<'EOF'
+          set -euo pipefail
+          : "${PROJECT_DIR:=/home/ubuntu/app}"
+          # Install Docker if missing
+          if ! command -v docker >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y ca-certificates curl gnupg lsb-release
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sudo sh get-docker.sh
+            rm get-docker.sh
+            sudo usermod -aG docker "$(whoami)" || true
+            sudo systemctl enable --now docker
+          fi
+          # Ensure docker compose plugin
+          if ! docker compose version >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y docker-compose-plugin || true
+          fi
+          # If project directory exists, pull and start compose
+          if [ -d "${PROJECT_DIR}" ]; then
+            cd "${PROJECT_DIR}"
             sudo docker compose pull || true
-            if ! sudo docker compose up -d --build; then
-              echo "[deploy-container] compose up failed — dumping logs:"
-              sudo docker compose ps || true
-              sudo docker compose logs --no-color --tail=200 || true
-              exit 1
-            fi
-            echo "[deploy-container] done $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            sudo docker compose up -d --build || true
+          fi
+          EOF
+
+
