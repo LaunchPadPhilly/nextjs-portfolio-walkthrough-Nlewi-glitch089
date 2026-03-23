@@ -18,7 +18,7 @@ jobs:
           port: 22
           timeout: 30s
           command_timeout: 30m
-          host_key_checking: false
+          known_hosts: unnecessary
           script: |
             set -euo pipefail
             REMOTE_DIR="${{ secrets.EC2_PROJECT_PATH }}"
