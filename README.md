@@ -172,6 +172,16 @@ What the tests check (high level):
 
 CI: GitHub Actions runs the same smoke/tests on push. See `.github/workflows/ci.yml`.
 
+### Manual EC2 Deploy (recommended)
+
+Automated EC2 deploy jobs are optional. For stable deploys when EC2 IPs rotate, use the one-command manual script:
+
+```bash
+EC2_HOST=<your-ec2-public-ip> EC2_SSH_USER=ubuntu EC2_SSH_KEY=~/.ssh/HR.pem ./scripts/deploy-remote.sh
+```
+
+This script SSHes into EC2, syncs the repo to `main`, ensures Node/npm and PM2 are installed, runs `npm ci`, builds, and restarts the PM2 process.
+
 ### CI pipeline (GitHub Actions)
 
 This repository includes a compact CI pipeline that runs three focused jobs in sequence:
