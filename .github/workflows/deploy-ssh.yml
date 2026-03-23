@@ -8,59 +8,67 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      EC2_USER: ${{ secrets.EC2_USER }}
-      EC2_HOST: ${{ secrets.EC2_HOST }}
-      EC2_KEY: ${{ secrets.EC2_KEY }}
-      REMOTE_DIR: ${{ secrets.EC2_PROJECT_PATH }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          node-version: '20'
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER || 'ubuntu' }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            set -euo pipefail
+            REMOTE_DIR="${{ secrets.EC2_PROJECT_PATH }}"
+            REMOTE_DIR="${REMOTE_DIR:-/home/$(whoami)/app}"
+            REPO="${{ github.repository }}"
+            CURRENT_USER="$(whoami)"
 
-      - name: Install rsync (optional)
-        run: sudo apt-get update && sudo apt-get install -y rsync
-
-      - name: Add SSH key and known hosts
-        if: env.EC2_USER != '' && env.EC2_HOST != '' && env.EC2_KEY != ''
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s' "$EC2_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || echo "Warning: ssh-keyscan failed; continuing"
-
-      - name: Deploy via SSH (pull & build on host)
-        if: env.EC2_USER != '' && env.EC2_HOST != '' && env.EC2_KEY != ''
-        run: |
-          REMOTE_DIR=${REMOTE_DIR:-/home/$EC2_USER/app}
-
-          ssh -o StrictHostKeyChecking=accept-new "$EC2_USER@$EC2_HOST" REMOTE_DIR="$REMOTE_DIR" REPO="${{ github.repository }}" bash -s << 'ENDSSH'
-          set -euo pipefail
-          REMOTE_DIR=${REMOTE_DIR:-/home/ubuntu/app}
-          mkdir -p "$REMOTE_DIR"
-          cd "$REMOTE_DIR"
-          if [ -d .git ]; then
-            git fetch --all --prune
-            git reset --hard origin/main
-          else
-            git init
-            if git remote get-url origin >/dev/null 2>&1; then
-              git remote set-url origin "https://github.com/$REPO"
-            else
-              git remote add origin "https://github.com/$REPO"
+            # ── 1. Docker ────────────────────────────────────────────────
+            if ! command -v docker &>/dev/null; then
+              sudo apt-get update -y
+              sudo apt-get install -y docker.io docker-compose-v2
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker "$CURRENT_USER"
             fi
-            git fetch --depth=1 origin main
-            git reset --hard FETCH_HEAD
-          fi
-          if ! command -v npm >/dev/null 2>&1; then
-            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-          fi
-          npm ci
-          npm run build
-          pm2 restart all || sudo systemctl restart my-app.service || true
-          ENDSSH
+            if ! docker compose version &>/dev/null; then
+              sudo apt-get update -y
+              sudo apt-get install -y docker-compose-plugin || true
+            fi
+
+            # ── 2. Node.js ────────────────────────────────────────────────
+            if ! command -v npm &>/dev/null; then
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+
+            # ── 3. PM2 (install + configure auto-start on reboot) ─────────
+            if ! command -v pm2 &>/dev/null; then
+              sudo npm install -g pm2
+              sudo env PATH="$PATH" pm2 startup systemd -u "$CURRENT_USER" --hp "$HOME" || true
+            fi
+
+            # ── 4. Clone or pull repo ─────────────────────────────────────
+            mkdir -p "$REMOTE_DIR"
+            cd "$REMOTE_DIR"
+            if [ -d .git ]; then
+              git fetch --all --prune
+              git reset --hard origin/main
+            else
+              git init
+              if git remote get-url origin &>/dev/null; then
+                git remote set-url origin "https://github.com/$REPO"
+              else
+                git remote add origin "https://github.com/$REPO"
+              fi
+              git fetch --depth=1 origin main
+              git reset --hard FETCH_HEAD
+            fi
+
+            # ── 5. Install deps & build ───────────────────────────────────
+            npm ci
+            npm run build
+
+            # ── 6. Start or restart app via PM2 ──────────────────────────
+            pm2 restart portfolio 2>/dev/null \
+              || pm2 start npm --name "portfolio" -- start
+            pm2 save

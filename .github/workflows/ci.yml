@@ -172,49 +172,34 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-test
     if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
-    env:
-      EC2_HOST: ${{ secrets.EC2_HOST }}
-      EC2_USER: ${{ secrets.EC2_USER }}
-      EC2_KEY: ${{ secrets.EC2_KEY }}
-      PROJECT_DIR: ${{ secrets.EC2_PROJECT_PATH }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Bootstrap Docker on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER || 'ubuntu' }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            set -euo pipefail
+            PROJECT_DIR="${{ secrets.EC2_PROJECT_PATH }}"
+            PROJECT_DIR="${PROJECT_DIR:-/home/$(whoami)/app}"
 
-      - name: Write EC2 private key
-        if: env.EC2_KEY != ''
-        run: |
-          printf '%s' "$EC2_KEY" > ec2_key.pem
-          chmod 600 ec2_key.pem
-
-      - name: Install Docker on EC2 and start compose
-        if: env.EC2_HOST != '' && env.EC2_USER != '' && env.EC2_KEY != ''
-        run: |
-          : "${PROJECT_DIR:=/home/ubuntu/app}"
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ec2_key.pem "${EC2_USER}@${EC2_HOST}" "PROJECT_DIR='${PROJECT_DIR}' bash -s" <<'EOF'
-          set -euo pipefail
-          : "${PROJECT_DIR:=/home/ubuntu/app}"
-          # Install Docker if missing
-          if ! command -v docker >/dev/null 2>&1; then
-            sudo apt-get update -y
-            sudo apt-get install -y ca-certificates curl gnupg lsb-release
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sudo sh get-docker.sh
-            rm get-docker.sh
-            sudo usermod -aG docker "$(whoami)" || true
-            sudo systemctl enable --now docker
-          fi
-          # Ensure docker compose plugin
-          if ! docker compose version >/dev/null 2>&1; then
-            sudo apt-get update -y
-            sudo apt-get install -y docker-compose-plugin || true
-          fi
-          # If project directory exists, pull and start compose
-          if [ -d "${PROJECT_DIR}" ]; then
-            cd "${PROJECT_DIR}"
-            sudo docker compose pull || true
-            sudo docker compose up -d --build || true
-          fi
-          EOF
-
-
+            # Install Docker if missing
+            if ! command -v docker &>/dev/null; then
+              sudo apt-get update -y
+              sudo apt-get install -y docker.io docker-compose-v2
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker "$(whoami)"
+            fi
+            # Ensure docker compose plugin
+            if ! docker compose version &>/dev/null; then
+              sudo apt-get update -y
+              sudo apt-get install -y docker-compose-plugin || true
+            fi
+            # Pull latest images and start compose if project exists
+            if [ -d "$PROJECT_DIR" ]; then
+              cd "$PROJECT_DIR"
+              docker compose pull || true
+              docker compose up -d --build || true
+            fi
