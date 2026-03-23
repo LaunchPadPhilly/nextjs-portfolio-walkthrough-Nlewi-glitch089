@@ -7,9 +7,11 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to EC2
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Deploy to EC2
+      - name: Check Prerequisites
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -17,28 +19,34 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           port: 22
           timeout: 30s
-          command_timeout: 45m
+          command_timeout: 5m
           request_pty: true
           script: |
             set -euxo pipefail
-            export DEBIAN_FRONTEND=noninteractive
-            export COMPOSE_DOCKER_CLI_BUILD=1
-            export DOCKER_BUILDKIT=1
+            echo "[prereq] checking required tools..."
+            command -v git    && echo "  git: OK"
+            command -v npm    && echo "  npm: OK"
+            command -v pm2    && echo "  pm2: OK"
+            command -v docker && echo "  docker: OK"
+            docker compose version && echo "  docker compose: OK"
+            echo "[prereq] all checks passed $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Sync Repository
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER || 'ubuntu' }}
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
+          request_pty: true
+          script: |
+            set -euxo pipefail
             REMOTE_DIR="${{ secrets.EC2_PROJECT_PATH }}"
             REMOTE_DIR="${REMOTE_DIR:-/home/$(whoami)/app}"
             REPO="${{ github.repository }}"
-            CURRENT_USER="$(whoami)"
-            echo "[deploy] start $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            echo "[deploy] target user=$CURRENT_USER dir=$REMOTE_DIR"
-
-            echo "[deploy] step 1/4: prerequisite checks"
-            command -v git
-            command -v npm
-            command -v pm2
-            command -v docker
-            docker compose version
-
-            echo "[deploy] step 2/4: sync repository"
+            echo "[sync] target dir=$REMOTE_DIR"
             mkdir -p "$REMOTE_DIR"
             cd "$REMOTE_DIR"
             if [ -d .git ]; then
@@ -54,13 +62,46 @@ jobs:
               git fetch --depth=1 origin main
               git reset --hard FETCH_HEAD
             fi
+            echo "[sync] done — HEAD=$(git rev-parse --short HEAD)"
 
-            echo "[deploy] step 3/4: install and build"
+      - name: Install Dependencies & Build
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER || 'ubuntu' }}
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          timeout: 30s
+          command_timeout: 20m
+          request_pty: true
+          script: |
+            set -euxo pipefail
+            REMOTE_DIR="${{ secrets.EC2_PROJECT_PATH }}"
+            REMOTE_DIR="${REMOTE_DIR:-/home/$(whoami)/app}"
+            cd "$REMOTE_DIR"
+            echo "[build] installing dependencies..."
             npm ci --no-audit --no-fund
+            echo "[build] building Next.js app..."
             npm run build
+            echo "[build] done $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-            echo "[deploy] step 4/4: restart app"
+      - name: Restart Application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER || 'ubuntu' }}
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          timeout: 30s
+          command_timeout: 5m
+          request_pty: true
+          script: |
+            set -euxo pipefail
+            REMOTE_DIR="${{ secrets.EC2_PROJECT_PATH }}"
+            REMOTE_DIR="${REMOTE_DIR:-/home/$(whoami)/app}"
+            cd "$REMOTE_DIR"
+            echo "[restart] starting/restarting PM2 process..."
             pm2 restart portfolio 2>/dev/null \
               || pm2 start npm --name "portfolio" -- start
             pm2 save
-            echo "[deploy] done $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "[restart] done $(date -u +%Y-%m-%dT%H:%M:%SZ)"
