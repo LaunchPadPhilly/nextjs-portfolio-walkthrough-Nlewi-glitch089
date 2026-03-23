@@ -25,10 +25,11 @@ jobs:
             set -euxo pipefail
             echo "[prereq] checking required tools..."
             command -v git    && echo "  git: OK"
-            command -v npm    && echo "  npm: OK"
-            command -v pm2    && echo "  pm2: OK"
             command -v docker && echo "  docker: OK"
             docker compose version && echo "  docker compose: OK"
+            # npm/pm2 are checked as warnings — they will be auto-installed if missing
+            command -v npm &>/dev/null && echo "  npm: OK" || echo "  npm: NOT FOUND (will install in build step)"
+            command -v pm2 &>/dev/null && echo "  pm2: OK" || echo "  pm2: NOT FOUND (will install in build step)"
             echo "[prereq] all checks passed $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
       - name: Sync Repository
@@ -79,6 +80,19 @@ jobs:
             REMOTE_DIR="${{ secrets.EC2_PROJECT_PATH }}"
             REMOTE_DIR="${REMOTE_DIR:-/home/$(whoami)/app}"
             cd "$REMOTE_DIR"
+            # Ensure Node.js + npm are present (self-healing for new/rebuilt instances)
+            if ! command -v npm >/dev/null 2>&1; then
+              echo "[build] npm not found — installing Node.js 20..."
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+            node -v
+            npm -v
+            # Ensure pm2 is present
+            if ! command -v pm2 >/dev/null 2>&1; then
+              echo "[build] pm2 not found — installing globally..."
+              sudo npm install -g pm2
+            fi
             echo "[build] installing dependencies..."
             npm ci --no-audit --no-fund
             echo "[build] building Next.js app..."
