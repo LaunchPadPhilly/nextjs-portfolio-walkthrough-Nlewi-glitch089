@@ -22,6 +22,8 @@ jobs:
           script: |
             set -euxo pipefail
             export DEBIAN_FRONTEND=noninteractive
+            export COMPOSE_DOCKER_CLI_BUILD=1
+            export DOCKER_BUILDKIT=1
             REMOTE_DIR="${{ secrets.EC2_PROJECT_PATH }}"
             REMOTE_DIR="${REMOTE_DIR:-/home/$(whoami)/app}"
             REPO="${{ github.repository }}"
@@ -29,32 +31,14 @@ jobs:
             echo "[deploy] start $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo "[deploy] target user=$CURRENT_USER dir=$REMOTE_DIR"
 
-            echo "[deploy] step 1/6: docker check"
-            if ! command -v docker &>/dev/null; then
-              sudo apt-get update -y
-              sudo apt-get install -y docker.io docker-compose-v2
-              sudo systemctl start docker
-              sudo systemctl enable docker
-              sudo usermod -aG docker "$CURRENT_USER"
-            fi
-            if ! docker compose version &>/dev/null; then
-              sudo apt-get update -y
-              sudo apt-get install -y docker-compose-plugin || true
-            fi
+            echo "[deploy] step 1/4: prerequisite checks"
+            command -v git
+            command -v npm
+            command -v pm2
+            command -v docker
+            docker compose version
 
-            echo "[deploy] step 2/6: node/npm check"
-            if ! command -v npm &>/dev/null; then
-              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-              sudo apt-get install -y nodejs
-            fi
-
-            echo "[deploy] step 3/6: pm2 check"
-            if ! command -v pm2 &>/dev/null; then
-              sudo npm install -g pm2
-              sudo env PATH="$PATH" pm2 startup systemd -u "$CURRENT_USER" --hp "$HOME" || true
-            fi
-
-            echo "[deploy] step 4/6: sync repository"
+            echo "[deploy] step 2/4: sync repository"
             mkdir -p "$REMOTE_DIR"
             cd "$REMOTE_DIR"
             if [ -d .git ]; then
@@ -71,11 +55,11 @@ jobs:
               git reset --hard FETCH_HEAD
             fi
 
-            echo "[deploy] step 5/6: install and build"
+            echo "[deploy] step 3/4: install and build"
             npm ci --no-audit --no-fund
             npm run build
 
-            echo "[deploy] step 6/6: restart app"
+            echo "[deploy] step 4/4: restart app"
             pm2 restart portfolio 2>/dev/null \
               || pm2 start npm --name "portfolio" -- start
             pm2 save

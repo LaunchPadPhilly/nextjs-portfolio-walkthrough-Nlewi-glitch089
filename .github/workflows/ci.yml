@@ -186,6 +186,8 @@ jobs:
           script: |
             set -euxo pipefail
             export DEBIAN_FRONTEND=noninteractive
+            export COMPOSE_DOCKER_CLI_BUILD=1
+            export DOCKER_BUILDKIT=1
             PROJECT_DIR="${{ secrets.EC2_PROJECT_PATH }}"
             PROJECT_DIR="${PROJECT_DIR:-/home/$(whoami)/app}"
             echo "[bootstrap] start $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -193,21 +195,35 @@ jobs:
 
             echo "[bootstrap] step 1/3: docker check"
             if ! command -v docker &>/dev/null; then
-              sudo apt-get update -y
-              sudo apt-get install -y docker.io docker-compose-v2
-              sudo systemctl start docker
-              sudo systemctl enable docker
-              sudo usermod -aG docker "$(whoami)"
+              sudo systemctl stop unattended-upgrades || true
+              sudo lsof /var/lib/dpkg/lock-frontend || true
+              sudo lsof /var/lib/apt/lists/lock || true
+              for i in {1..24}; do
+                if sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; then
+                  echo "dpkg lock present, waiting..."
+                  sleep 5
+                else
+                  break
+                fi
+              done
+              timeout 180 sudo apt-get update -y
+              timeout 300 sudo apt-get install -y docker.io docker-compose-v2
+              timeout 60 sudo systemctl start docker
+              timeout 60 sudo systemctl enable docker
             fi
             echo "[bootstrap] step 2/3: compose plugin check"
             if ! docker compose version &>/dev/null; then
-              sudo apt-get update -y
-              sudo apt-get install -y docker-compose-plugin || true
+              timeout 180 sudo apt-get update -y
+              timeout 180 sudo apt-get install -y docker-compose-plugin
             fi
             echo "[bootstrap] step 3/3: compose refresh"
             if [ -d "$PROJECT_DIR" ]; then
               cd "$PROJECT_DIR"
-              docker compose pull || true
-              docker compose up -d --build || true
+              sudo docker compose pull || true
+              if ! sudo docker compose up -d --build; then
+                sudo docker compose ps || true
+                sudo docker compose logs --no-color --tail=200 || true
+                exit 1
+              fi
             fi
             echo "[bootstrap] done $(date -u +%Y-%m-%dT%H:%M:%SZ)"
