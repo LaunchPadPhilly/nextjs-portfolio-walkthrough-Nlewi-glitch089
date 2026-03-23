@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { readFile, writeFile } from 'fs/promises'
+import path from 'path'
 
-const CTX_PATH = new URL('../../../data/ai_context.json', import.meta.url)
+const CTX_PATH = path.join(process.cwd(), 'data', 'ai_context.json')
 
 export async function GET() {
   try {

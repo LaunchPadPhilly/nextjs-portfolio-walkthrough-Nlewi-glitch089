@@ -2,18 +2,32 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import ToastHost from '../components/ToastHost'
+import AdminGate from '../components/AdminGate'
 
 export default function AdminContextEditor() {
   const [prompt, setPrompt] = useState('')
   const [avatarPath, setAvatarPath] = useState('/profile.jpg')
   const [loading, setLoading] = useState(false)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     fetch('/api/context')
       .then(r => r.json())
       .then(j => { if (j.systemPrompt) setPrompt(j.systemPrompt); if (j.avatarPath) setAvatarPath(j.avatarPath) })
+      .finally(() => setReady(true))
   }, [])
+
+  if (!ready) {
+    return (
+      <div className="site-container">
+        <div className="card" style={{ marginTop: 16 }}>
+          <p style={{ margin: 0, color: '#b6b6c8' }}>Loading admin panel…</p>
+        </div>
+      </div>
+    )
+  }
 
   async function save() {
     setLoading(true)
@@ -69,6 +83,7 @@ export default function AdminContextEditor() {
   }
 
   return (
+    <AdminGate title="Admin Panel" description="Sign in to edit your portfolio AI settings.">
     <div className="site-container">
       <ToastHost />
       <header className="reveal" style={{ marginBottom: 14 }}>
@@ -90,6 +105,11 @@ export default function AdminContextEditor() {
           </div>
         </div>
       </header>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+        <Link href="/admin/projects" className="btn-primary">Manage Projects</Link>
+        <Link href="/admin/conversations" className="btn-ghost">Manage Conversations</Link>
+      </div>
 
       <div className="card reveal">
         <div style={{ marginBottom: 8 }}>
@@ -114,5 +134,6 @@ export default function AdminContextEditor() {
         </div>
       </div>
     </div>
+    </AdminGate>
   )
 }

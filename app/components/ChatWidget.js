@@ -4,13 +4,56 @@ import React, { useEffect, useRef, useState } from 'react'
 import styles from './ChatWidget.module.css'
 import Image from 'next/image'
 
-const DEFAULT_SYSTEM_PROMPT = `You are an AI assistant helping visitors explore Nakerra Lewis's portfolio.
+const DEFAULT_AVATAR_PATH = '/download.png'
+const EDGE_PADDING = 16
+const BUBBLE_SIZE = 56
+const DEFAULT_PANEL_WIDTH = 380
+const DEFAULT_PANEL_HEIGHT = 560
+
+function getWidgetSize(isOpen) {
+  if (typeof window === 'undefined') return { width: DEFAULT_PANEL_WIDTH, height: DEFAULT_PANEL_HEIGHT }
+  if (!isOpen) return { width: BUBBLE_SIZE, height: BUBBLE_SIZE }
+  return {
+    width: Math.min(DEFAULT_PANEL_WIDTH, window.innerWidth - EDGE_PADDING * 2),
+    height: Math.min(DEFAULT_PANEL_HEIGHT, Math.round(window.innerHeight * 0.7)),
+  }
+}
+
+function clampPosition(nextPosition, isOpen) {
+  if (typeof window === 'undefined') return nextPosition
+  const { width, height } = getWidgetSize(isOpen)
+  return {
+    x: Math.min(Math.max(EDGE_PADDING, nextPosition.x), Math.max(EDGE_PADDING, window.innerWidth - width - EDGE_PADDING)),
+    y: Math.min(Math.max(EDGE_PADDING, nextPosition.y), Math.max(EDGE_PADDING, window.innerHeight - height - EDGE_PADDING)),
+  }
+}
+
+function getDefaultPosition(isOpen) {
+  if (typeof window === 'undefined') return { x: EDGE_PADDING, y: EDGE_PADDING }
+  const { width, height } = getWidgetSize(isOpen)
+  return {
+    x: Math.max(EDGE_PADDING, window.innerWidth - width - EDGE_PADDING),
+    y: Math.max(EDGE_PADDING, window.innerHeight - height - EDGE_PADDING),
+  }
+}
+
+function normalizeAvatarPath(path) {
+  if (!path || typeof path !== 'string') return DEFAULT_AVATAR_PATH
+  return path.startsWith('/') ? path : `/${path}`
+}
+
+const DEFAULT_SYSTEM_PROMPT = `You are Nakerra Lewis's AI portfolio guide and should speak in first person as Nakerra.
 
 Answer questions about:
-- Her projects
-- Her skills
-- Her interests in UX, game design, and interactive media
-- Her portfolio work
+- My projects
+- My skills
+- My interests in UX, game design, and interactive media
+- My portfolio work
+
+Response style rules:
+- If asked "What do you do?", "What's your experience?", or any "you/your" question, answer as me in first person.
+- Keep answers concise, natural, and confident.
+- Do not describe me as "she" unless explicitly asked for third-person bio copy.
 
 When appropriate, recommend which project the visitor should view next.`
 
@@ -19,46 +62,90 @@ export default function ChatWidget() {
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState([{ role: 'system', content: DEFAULT_SYSTEM_PROMPT }])
   const [loading, setLoading] = useState(false)
-  const [avatarPath, setAvatarPath] = useState('/profile.jpg')
+  const [avatarPath, setAvatarPath] = useState(DEFAULT_AVATAR_PATH)
   const [sessionId, setSessionId] = useState(null)
+  const [position, setPosition] = useState(null)
 
   const endRef = useRef(null)
   const audioCtxRef = useRef(null)
   const typingIntervalRef = useRef(null)
+  const dragStateRef = useRef(null)
+  const dragMovedRef = useRef(false)
 
   useEffect(() => {
-    // load avatar config and previous messages on mount
-    (async () => {
+    ;(async () => {
       try {
-        const r = await fetch('/api/context')
-        if (r.ok) {
-          const j = await r.json()
-          if (j?.avatarPath) setAvatarPath(j.avatarPath)
+        const response = await fetch('/api/context')
+        if (response.ok) {
+          const json = await response.json()
+          setAvatarPath(normalizeAvatarPath(json?.avatarPath))
         }
       } catch (e) {}
 
       try {
-        // generate session id (used if user chooses to save)
-        let sid = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9)
+        const sid = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9)
         setSessionId(sid)
-        // do NOT auto-load previous conversations — chat is ephemeral until explicitly saved
       } catch (e) {}
     })()
-    function onContextUpdated(e) {
+
+    function onContextUpdated(event) {
       try {
-        const p = e?.detail?.avatarPath
-        if (p) setAvatarPath(p)
-        else {
-          // fallback: re-fetch context
-          fetch('/api/context').then(r => r.json()).then(j => { if (j?.avatarPath) setAvatarPath(j.avatarPath) }).catch(() => {})
+        const nextPath = event?.detail?.avatarPath
+        if (nextPath) {
+          setAvatarPath(normalizeAvatarPath(nextPath))
+          return
         }
+        fetch('/api/context')
+          .then(response => response.json())
+          .then(json => { setAvatarPath(normalizeAvatarPath(json?.avatarPath)) })
+          .catch(() => {})
       } catch (err) {}
     }
+
     window.addEventListener('contextUpdated', onContextUpdated)
     return () => window.removeEventListener('contextUpdated', onContextUpdated)
   }, [])
 
-  // do not auto-persist messages; provide explicit save/download controls
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    setPosition(current => clampPosition(current || getDefaultPosition(open), open))
+
+    function handleResize() {
+      setPosition(current => clampPosition(current || getDefaultPosition(open), open))
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [open])
+
+  useEffect(() => {
+    function handlePointerMove(event) {
+      const dragState = dragStateRef.current
+      if (!dragState) return
+      if (Math.abs(event.clientX - dragState.startX) > 4 || Math.abs(event.clientY - dragState.startY) > 4) {
+        dragMovedRef.current = true
+      }
+      const nextPosition = {
+        x: dragState.originX + (event.clientX - dragState.startX),
+        y: dragState.originY + (event.clientY - dragState.startY),
+      }
+      setPosition(clampPosition(nextPosition, open))
+    }
+
+    function handlePointerUp() {
+      dragStateRef.current = null
+      window.setTimeout(() => {
+        dragMovedRef.current = false
+      }, 0)
+    }
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+    }
+  }, [open])
 
   useEffect(() => {
     if (open && endRef.current) endRef.current.scrollIntoView({ behavior: 'smooth' })
@@ -67,30 +154,36 @@ export default function ChatWidget() {
   function startTypingSound() {
     try {
       if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)()
-      const ctx = audioCtxRef.current
+      const context = audioCtxRef.current
       if (typingIntervalRef.current) return
       typingIntervalRef.current = setInterval(() => {
-        const o = ctx.createOscillator()
-        const g = ctx.createGain()
-        o.type = 'sine'
-        o.frequency.setValueAtTime(880, ctx.currentTime)
-        g.gain.setValueAtTime(0.0001, ctx.currentTime)
-        o.connect(g)
-        g.connect(ctx.destination)
-        o.start()
-        g.gain.exponentialRampToValueAtTime(0.02, ctx.currentTime + 0.01)
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12)
-        o.stop(ctx.currentTime + 0.14)
+        const oscillator = context.createOscillator()
+        const gain = context.createGain()
+        oscillator.type = 'sine'
+        oscillator.frequency.setValueAtTime(880, context.currentTime)
+        gain.gain.setValueAtTime(0.0001, context.currentTime)
+        oscillator.connect(gain)
+        gain.connect(context.destination)
+        oscillator.start()
+        gain.gain.exponentialRampToValueAtTime(0.02, context.currentTime + 0.01)
+        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.12)
+        oscillator.stop(context.currentTime + 0.14)
       }, 160)
     } catch (e) {}
   }
 
   function stopTypingSound() {
-    try { if (typingIntervalRef.current) { clearInterval(typingIntervalRef.current); typingIntervalRef.current = null } } catch (e) {}
+    try {
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current)
+        typingIntervalRef.current = null
+      }
+    } catch (e) {}
   }
 
   async function sendMessage(eOrText) {
     if (!eOrText) return
+
     let userText = ''
     if (typeof eOrText === 'string') {
       userText = eOrText.trim()
@@ -100,45 +193,45 @@ export default function ChatWidget() {
     }
     if (!userText) return
 
-    const userMsg = { role: 'user', content: userText }
+    const userMessage = { role: 'user', content: userText }
     const placeholder = { role: 'assistant', content: '', pending: true }
-    const next = [...messages, userMsg, placeholder]
-    setMessages(next)
+    setMessages(prev => [...prev, userMessage, placeholder])
     setInput('')
     setLoading(true)
     startTypingSound()
 
     try {
-      const res = await fetch('/api/chat', {
+      const conversationForApi = [...messages.filter(message => message.role !== 'system' && !message.pending), userMessage]
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: conversationForApi }),
       })
-      if (!res.ok) {
-        const text = await res.text()
+      if (!response.ok) {
+        const text = await response.text()
         throw new Error(text || 'AI service error')
       }
-      const data = await res.json()
-      const ai = data?.reply ?? 'Sorry, I had trouble answering that.'
+      const data = await response.json()
+      const reply = data?.reply ?? 'Sorry, I had trouble answering that.'
 
       setMessages(prev => {
-        const copy = [...prev]
-        const last = copy.length - 1
-        if (last >= 0 && copy[last].pending) {
-          copy[last] = { role: 'assistant', content: ai }
+        const nextMessages = [...prev]
+        const lastIndex = nextMessages.length - 1
+        if (lastIndex >= 0 && nextMessages[lastIndex].pending) {
+          nextMessages[lastIndex] = { role: 'assistant', content: reply }
         } else {
-          copy.push({ role: 'assistant', content: ai })
+          nextMessages.push({ role: 'assistant', content: reply })
         }
-        return copy
+        return nextMessages
       })
     } catch (err) {
       setMessages(prev => {
-        const copy = [...prev]
-        const last = copy.length - 1
-        const msg = { role: 'assistant', content: 'Error: ' + (err?.message || 'unknown') }
-        if (last >= 0 && copy[last].pending) copy[last] = msg
-        else copy.push(msg)
-        return copy
+        const nextMessages = [...prev]
+        const lastIndex = nextMessages.length - 1
+        const errorMessage = { role: 'assistant', content: 'Error: ' + (err?.message || 'unknown') }
+        if (lastIndex >= 0 && nextMessages[lastIndex].pending) nextMessages[lastIndex] = errorMessage
+        else nextMessages.push(errorMessage)
+        return nextMessages
       })
     } finally {
       stopTypingSound()
@@ -149,12 +242,16 @@ export default function ChatWidget() {
   async function saveConversation() {
     if (!sessionId) return
     try {
-      const res = await fetch('/api/conversations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, messages }) })
-      const j = await res.json()
-      if (j.ok) {
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, messages }),
+      })
+      const json = await response.json()
+      if (json.ok) {
         try { window.dispatchEvent(new CustomEvent('showToast', { detail: { message: 'Conversation saved', type: 'success' } })) } catch (e) {}
       } else {
-        try { window.dispatchEvent(new CustomEvent('showToast', { detail: { message: 'Save failed: ' + (j.error || 'unknown'), type: 'error' } })) } catch (e) {}
+        try { window.dispatchEvent(new CustomEvent('showToast', { detail: { message: 'Save failed: ' + (json.error || 'unknown'), type: 'error' } })) } catch (e) {}
       }
     } catch (err) {
       try { window.dispatchEvent(new CustomEvent('showToast', { detail: { message: 'Save error: ' + err.message, type: 'error' } })) } catch (e) {}
@@ -166,12 +263,12 @@ export default function ChatWidget() {
       const payload = { messages }
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `conversation-${new Date().toISOString().replace(/[:.]/g,'-')}.json`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `conversation-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
       URL.revokeObjectURL(url)
     } catch (err) {
       try { window.dispatchEvent(new CustomEvent('showToast', { detail: { message: 'Download failed: ' + err.message, type: 'error' } })) } catch (e) {}
@@ -183,21 +280,58 @@ export default function ChatWidget() {
     try { window.dispatchEvent(new CustomEvent('showToast', { detail: { message: 'Cleared', type: 'info' } })) } catch (e) {}
   }
 
+  function beginDrag(event) {
+    if (event.button !== 0) return
+    const interactiveTarget = event.target.closest('button, input, textarea, a')
+    if (open && interactiveTarget) return
+    dragMovedRef.current = false
+    const currentPosition = position || getDefaultPosition(open)
+    dragStateRef.current = {
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: currentPosition.x,
+      originY: currentPosition.y,
+    }
+    event.preventDefault()
+  }
+
+  function toggleOpen() {
+    if (dragMovedRef.current) return
+    setOpen(current => !current)
+  }
+
+  // Don't render until position is initialised by the mount effect.
+  // Both server and client first-render produce null → no hydration mismatch.
+  // The widget then appears at the correct bottom-right position on first paint,
+  // with no flash or jump to the top-left fallback.
+  if (position === null) return null
+
+  const widgetPosition = position
+
   return (
     <>
-      <div>
-        <button className={styles.bubble} onClick={() => setOpen(v => !v)} aria-label="Open chat">🤖</button>
+      <div className={styles.anchor} style={{ left: widgetPosition.x, top: widgetPosition.y }}>
+        {!open && (
+          <button className={styles.bubble} onClick={toggleOpen} onPointerDown={beginDrag} aria-label="Open chat">
+            🤖
+          </button>
+        )}
       </div>
 
       {open && (
-        <div className={`${styles.panel} ${open ? styles.open : ''}`} role="dialog" aria-hidden={!open}>
-          <div className={styles.header}>
+        <div
+          className={`${styles.panel} ${open ? styles.open : ''}`}
+          role="dialog"
+          aria-hidden={!open}
+          style={{ left: widgetPosition.x, top: widgetPosition.y }}
+        >
+          <div className={styles.header} onPointerDown={beginDrag}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <div className={styles.avatar} aria-hidden>
-                <Image src={avatarPath || '/profile.jpg'} alt="avatar" width={40} height={40} className={styles.avatarImg} />
+                <Image src={avatarPath || DEFAULT_AVATAR_PATH} alt="avatar" width={40} height={40} className={styles.avatarImg} onError={() => setAvatarPath(DEFAULT_AVATAR_PATH)} />
               </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <strong>Nakerra\u0027s AI Guide</strong>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <strong>Nakerra&apos;s AI Guide</strong>
                 <small style={{ color: 'rgba(255,255,255,0.6)' }}>Ask about projects, skills, or hiring</small>
               </div>
             </div>
@@ -210,46 +344,45 @@ export default function ChatWidget() {
           </div>
 
           <div className={styles.history}>
-            {messages.filter(m => m.role !== 'system').length === 0 ? (
+            {messages.filter(message => message.role !== 'system').length === 0 ? (
               <div className={styles.greeting}>
                 <div className={styles.greetAvatar}>
-                  <Image src={avatarPath || '/profile.jpg'} alt="avatar" width={72} height={72} className={styles.avatarImg} />
+                  <Image src={avatarPath || DEFAULT_AVATAR_PATH} alt="avatar" width={72} height={72} className={styles.avatarImg} onError={() => setAvatarPath(DEFAULT_AVATAR_PATH)} />
                 </div>
                 <h3>Hey there, ask me anything</h3>
                 <p className={styles.greetSubtitle}>I can tell you about my work, projects, or how to hire me.</p>
                 <div className={styles.quickBtns}>
-                  {['What do you do?', 'What\u0027s your experience?', 'Tell me about Nerd Street CRM'].map(q => (
-                    <button key={q} className={styles.quick} onClick={() => sendMessage(q)}>{q}</button>
+                  {['What do you do?', "What's your experience?", 'Tell me about Nerd Street CRM'].map(question => (
+                    <button key={question} className={styles.quick} onClick={() => sendMessage(question)}>{question}</button>
                   ))}
                 </div>
               </div>
             ) : (
-              messages.filter(m => m.role !== 'system').map((m, i) => (
-                <div key={i} style={{ marginBottom: 12, maxWidth: '100%' }} className={m.role === 'user' ? styles.user : (m.pending ? `${styles.ai} ${styles.pending}` : styles.ai)}>
-                  {m.pending ? (
-                    <span className={styles.ellipsis}><span>.</span><span>.</span><span>.</span></span>
-                  ) : (
-                    m.content
-                  )}
-                </div>
-              ))
-            )}
-            {loading && (
-              <div className={styles.typing} style={{ marginTop: 8 }}>
-                <div className="dot" />
-                <div className="dot" />
-                <div className="dot" />
-              </div>
+              messages
+                .filter(message => message.role !== 'system')
+                .map((message, index) => (
+                  <div
+                    key={index}
+                    style={{ marginBottom: 12, maxWidth: '100%' }}
+                    className={message.role === 'user' ? styles.user : (message.pending ? `${styles.ai} ${styles.pending}` : styles.ai)}
+                  >
+                    {message.pending ? (
+                      <span className={styles.ellipsis}><span>.</span><span>.</span><span>.</span></span>
+                    ) : (
+                      message.content
+                    )}
+                  </div>
+                ))
             )}
             <div ref={endRef} />
           </div>
 
-          <form className={styles.form} onSubmit={(e) => sendMessage(e)}>
+          <form className={styles.form} onSubmit={sendMessage}>
             <input
               aria-label="Ask about my work"
               value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder={loading ? 'Thinking...' : 'Type a message...'}
+              onChange={event => setInput(event.target.value)}
+              placeholder="Type a message..."
               disabled={loading}
             />
             <button type="submit" disabled={loading || !input.trim()} className={styles.sendBtn} aria-label="Send">✈</button>

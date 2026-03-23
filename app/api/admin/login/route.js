@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import crypto from 'crypto'
+import { ADMIN_COOKIE_MAX_AGE, ADMIN_COOKIE_NAME, createAdminToken, isSecureCookieRequest } from '../../../../lib/adminAuth'
 
 export async function POST(req) {
   try {
@@ -7,15 +7,19 @@ export async function POST(req) {
     const expected = process.env.ADMIN_PASSWORD || 'changeme'
     if (password !== expected) return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
 
-    const ts = Date.now().toString()
     const secret = process.env.ADMIN_SECRET || expected
-    const hmac = crypto.createHmac('sha256', secret).update(ts).digest('hex')
-    const token = `${ts}:${hmac}`
+    const token = await createAdminToken(secret)
 
     const res = NextResponse.json({ ok: true })
-    const secureFlag = process.env.NODE_ENV === 'production' ? 'Secure; ' : ''
-    // Set cookie for 7 days — use SameSite=Lax so top-level navigations and prefetches include the cookie
-    res.headers.set('Set-Cookie', `admin_auth=${encodeURIComponent(token)}; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=${60 * 60 * 24 * 7}`)
+    res.cookies.set({
+      name: ADMIN_COOKIE_NAME,
+      value: token,
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      secure: isSecureCookieRequest(req.url),
+      maxAge: ADMIN_COOKIE_MAX_AGE,
+    })
     return res
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })

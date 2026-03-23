@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server'
+import { ADMIN_COOKIE_NAME, isSecureCookieRequest } from '../../../../lib/adminAuth'
 
-export async function POST() {
+export async function POST(req) {
   const res = NextResponse.json({ ok: true })
-  // Clear cookie (match SameSite and Path)
-  res.headers.set('Set-Cookie', `admin_auth=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`)
+  res.cookies.set({
+    name: ADMIN_COOKIE_NAME,
+    value: '',
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    secure: isSecureCookieRequest(req.url),
+    maxAge: 0,
+  })
   return res
 }

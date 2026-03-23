@@ -7,11 +7,22 @@ import ProjectRecommender from '../components/ProjectRecommender'
 
 export default function Projects() {
   const [filter, setFilter] = useState('All')
+  const [explainingById, setExplainingById] = useState({})
+  const [explainModal, setExplainModal] = useState({ open: false, title: '', loading: false, explanation: '', error: '', aiGenerated: false, isComingSoon: false })
 
   const [projects, setProjects] = useState([])
   useEffect(() => {
     fetch('/api/projects').then(r => r.json()).then(j => { if (j.projects) setProjects(j.projects) }).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!explainModal.open) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [explainModal.open])
 
   const visibleProjects = (projects || []).filter((p) => filter === 'All' || (p.categories || []).includes(filter))
 
@@ -77,7 +88,19 @@ export default function Projects() {
                   )}
                   <button
                     className="btn-ghost"
+                    disabled={Boolean(explainingById[p.id])}
                     onClick={async () => {
+                      const isComingSoon = !p.href
+                      setExplainingById((prev) => ({ ...prev, [p.id]: true }))
+                      setExplainModal({
+                        open: true,
+                        title: p.title,
+                        loading: true,
+                        explanation: '',
+                        error: '',
+                        aiGenerated: false,
+                        isComingSoon,
+                      })
                       try {
                         const res = await fetch('/api/explain', {
                           method: 'POST',
@@ -86,19 +109,101 @@ export default function Projects() {
                         })
                         const data = await res.json()
                         if (data.error) throw new Error(data.error)
-                        window.alert(data.explanation)
+                        setExplainModal({
+                          open: true,
+                          title: p.title,
+                          loading: false,
+                          explanation: data.explanation || 'No explanation returned.',
+                          error: '',
+                          aiGenerated: Boolean(data.aiGenerated),
+                          isComingSoon,
+                        })
                       } catch (err) {
-                        window.alert('Unable to fetch explanation: ' + err.message)
+                        setExplainModal({
+                          open: true,
+                          title: p.title,
+                          loading: false,
+                          explanation: '',
+                          error: `Unable to fetch explanation: ${err.message}`,
+                          aiGenerated: false,
+                          isComingSoon,
+                        })
+                      } finally {
+                        setExplainingById((prev) => ({ ...prev, [p.id]: false }))
                       }
                     }}
                   >
-                    Explain
+                    {explainingById[p.id] ? 'Explaining…' : 'Explain'}
                   </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
+
+        {explainModal.open && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Project explanation"
+            onClick={() => setExplainModal((prev) => ({ ...prev, open: false }))}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 70,
+              background: 'rgba(0, 0, 0, 0.55)',
+              display: 'grid',
+              placeItems: 'center',
+              padding: '1rem',
+              overscrollBehavior: 'none',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: 'min(720px, 94vw)',
+                maxHeight: '80vh',
+                overflow: 'auto',
+                background: 'rgba(10, 14, 24, 0.98)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '14px',
+                padding: '1rem 1.1rem',
+                boxShadow: '0 24px 60px rgba(0, 0, 0, 0.6)',
+                overscrollBehavior: 'contain',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--foreground)' }}>{explainModal.title}</h3>
+                <button className="btn-ghost" onClick={() => setExplainModal((prev) => ({ ...prev, open: false }))}>Close</button>
+              </div>
+
+              {explainModal.loading && (
+                <p style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: 'var(--accent)', lineHeight: 1.6 }}>
+                  {explainModal.isComingSoon ? '✦ Fetching from AI — this may take a moment…' : 'Generating explanation…'}
+                </p>
+              )}
+
+              {!explainModal.loading && explainModal.error && (
+                <p style={{ margin: 0, fontSize: '1rem', color: '#ffb4b4', lineHeight: 1.6 }}>
+                  {explainModal.error}
+                </p>
+              )}
+
+              {!explainModal.loading && !explainModal.error && (
+                <>
+                  <p style={{ margin: 0, fontSize: '1.06rem', color: 'var(--foreground)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+                    {explainModal.explanation}
+                  </p>
+                  {explainModal.aiGenerated && (
+                    <p style={{ margin: '0.75rem 0 0', fontSize: '0.78rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.02em' }}>
+                      ✦ Generated by AI
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

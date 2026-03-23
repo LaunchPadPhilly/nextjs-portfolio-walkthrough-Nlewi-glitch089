@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { readFile, writeFile } from 'fs/promises'
+import path from 'path'
 
-const PATH = new URL('../../../data/projects.json', import.meta.url)
+const PATH = path.join(process.cwd(), 'data', 'projects.json')
 
 export async function GET() {
   try {
