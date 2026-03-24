@@ -2,7 +2,7 @@
 
 This document describes the current project layout and runtime architecture. The repository is a Next.js application (App Router) that uses Prisma and PostgreSQL for persistence, and includes Docker tooling and GitHub Actions CI for testing and smoke checks.
 
-Last updated: 2026-03-13
+Last updated: 2026-03-24
 
 ## 1. Project Structure (high level)
 
@@ -75,12 +75,34 @@ Integration method: REST APIs or vendor SDKs.
 
 ## 6. Deployment & Infrastructure
 
-This project is cloud-agnostic. The repo includes:
+### 6.1 GitHub Actions CI/CD
+
+The repository includes a single consolidated CI pipeline (`.github/workflows/ci.yml`) that runs on every push to `main` and `develop`:
+
+1. **Security Audit** — `npm audit` to surface vulnerabilities
+2. **Build & Test** — lint, run tests (Vitest), smoke checks, and optional Docker+Postgres integration tests
+3. **Setup EC2 Docker & Start App** — (runs on `main` only) SSHes to EC2, installs Docker if missing, pulls latest code, and restarts the app via `docker compose`
+
+Required GitHub secrets for EC2 deployment:
+- `EC2_HOST` — public IP or DNS of your EC2 instance
+- `EC2_USER` — SSH user (e.g., `ubuntu`)
+- `EC2_KEY` — private SSH key (PEM format)
+- `EC2_PROJECT_PATH` — remote directory path (optional, defaults to `/home/ubuntu/app`)
+
+### 6.2 Manual Deployment
+
+For faster iteration, use the manual deploy script from your local machine:
+
+```bash
+EC2_HOST=<instance-ip> EC2_SSH_USER=ubuntu EC2_SSH_KEY=~/.ssh/HR.pem ./scripts/deploy-remote.sh
+```
+
+This script syncs your repo, installs Node/npm/pm2 if missing, runs `npm ci && npm run build`, and restarts the PM2 process.
+
+### 6.3 Local Development
 
 - `Dockerfile` and `docker-compose.yml` for building the app and running an integrated local stack
-- GitHub Actions workflows under `.github/workflows/` (CI/CD). The `CI/CD` workflow runs smoke tests and optional docker-compose steps.
-
-Prisma migrations and schema generation are invoked in CI and via `docker-entrypoint.sh` when appropriate.
+- Prisma migrations and schema generation are invoked in CI and via `docker-entrypoint.sh` when appropriate
 
 ## 7. Security Considerations
 
@@ -94,7 +116,25 @@ Prisma migrations and schema generation are invoked in CI and via `docker-entryp
 Quick start (local):
 
 1. Install Node.js and Docker.
-2. Prepare a local `./secrets/database_url.txt` for compose, e.g. `postgresql://postgres:postgres@db:5432/appdb`.
+2. PreEC2 Infrastructure
+
+### 9.1 Instance Setup
+
+- **OS:** Ubuntu Linux (t2.micro or similar)
+- **Tools:** Docker, Docker Compose, PM2 (process manager), Node.js, Git
+- **Networking:** Security group inbound rules allow SSH (port 22) and HTTP (port 80) from GitHub Actions and end users
+- **App Port:** The Next.js app runs on port 3000 inside the container, exposed to port 80 on the host via Docker Compose
+
+### 9.2 Deployment Flow
+
+When you push to `main`:
+1. GitHub Actions triggers the `ci.yml` workflow
+2. After tests pass, the `setup-ec2-docker` job SSHes into EC2
+3. It pulls the latest code from GitHub, builds the app, and restarts it via `docker compose up -d --build`
+
+Alternatively (for faster feedback), run `./scripts/deploy-remote.sh` locally from your dev machine.
+
+## 10. pare a local `./secrets/database_url.txt` for compose, e.g. `postgresql://postgres:postgres@db:5432/appdb`.
 3. Start with Docker Compose:
 
 ```bash

@@ -184,21 +184,28 @@ This script SSHes into EC2, syncs the repo to `main`, ensures Node/npm and PM2 a
 
 ### CI pipeline (GitHub Actions)
 
-This repository includes a compact CI pipeline that runs three focused jobs in sequence:
+This repository includes a single consolidated CI pipeline that runs on every push to `main` and `develop` (see `.github/workflows/ci.yml`):
 
-- **Security Audit** — runs a lightweight `npm audit` to surface moderate+ vulnerabilities early.
-- **Build & Test** — installs dependencies and runs the test suite (Vitest) and optional Docker-backed smoke checks.
-- **Deploy to EC2** — an optional job that SSHes to your EC2 host, installs Docker if missing, and runs `docker compose up -d --build`.
+1. **Security Audit** — `npm audit` to surface moderate+ vulnerabilities
+2. **Build & Test** — installs dependencies, lints, runs tests (Vitest), and smoke checks
+3. **Setup EC2 Docker & Start App** — (on `main` only) SSHes to EC2, ensures Docker is installed, and runs `docker compose up -d --build`
 
-The deploy job uses the following GitHub repository secrets (add these under Settings → Secrets → Actions):
+For manual deployments without pushing code, run the script from your local machine:
 
-- `EC2_HOST` — the public IP or DNS name of your EC2 instance.
-- `EC2_USER` — the SSH user for the instance (e.g., `ubuntu`).
-- `EC2_KEY` — the private key (PEM) contents used to SSH as `EC2_USER`.
+```bash
+EC2_HOST=<your-ec2-ip> EC2_SSH_USER=ubuntu EC2_SSH_KEY=~/.ssh/HR.pem ./scripts/deploy-remote.sh
+```
 
-For safety the deploy job is designed to be triggered manually (`workflow_dispatch`) or only on `main` pushes. The job is idempotent and will install Docker/docker-compose if missing before attempting to start the app.
+This syncs the repo, ensures Node/npm/PM2 are installed, builds, and restarts the PM2 app.
 
-If you prefer more secure key handling, consider supplying the private key with `webfactory/ssh-agent` or use an `ssh` agent rather than echoing a key file in the workflow.
+### GitHub secrets required for EC2 deployment
+
+Set these in your repo → Settings → Secrets and variables → Actions:
+
+- `EC2_HOST` — public IP or DNS of your EC2 instance
+- `EC2_USER` — SSH user (e.g., `ubuntu`)
+- `EC2_KEY` — private SSH key contents (PEM format)
+- `EC2_PROJECT_PATH` — (optional) remote directory, defaults to `/home/ubuntu/app`
 
 ### Troubleshooting EC2 reachability
 

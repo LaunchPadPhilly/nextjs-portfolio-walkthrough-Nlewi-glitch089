@@ -1,43 +1,43 @@
-# EC2 Instance Smoke Checks
+# EC2 Instance & Deployment
 
-This document explains how to run a simple smoke check against a deployed EC2 instance and how the repository's CI job can run the same check.
+This document explains how the repository deploys to and tests an EC2 instance.
 
-What the check does
+## What happens during deployment
 
-- Sends an HTTP(S) GET to the root of your EC2 host and asserts a 2xx response.
-- The local test is intentionally skipped unless `EC2_HOST` is set in the environment.
+The main CI workflow (`.github/workflows/ci.yml`) includes a `setup-ec2-docker` job that:
 
-Running locally
+1. SSHes into your EC2 host
+2. Installs Docker if not already present
+3. Pulls the latest code from GitHub
+4. Runs `docker compose up -d --build` to rebuild and restart the app
 
-1. Set the `EC2_HOST` environment variable to your instance's public DNS or IP.
-   - Optionally set `EC2_PROTOCOL` to `https` if your site uses HTTPS.
+This job runs automatically on pushes to `main` after the build and test jobs pass.
 
-Example (PowerShell):
+## Instance setup checklist
 
-```powershell
-$env:EC2_HOST = "ec2-3-12-34-56.compute-1.amazonaws.com"
-$env:EC2_PROTOCOL = "https" # optional
-npm run test:ec2
-```
+Before enabling the EC2 deployment job, your instance should have:
 
-Example (bash):
+- **Security group rules:** Inbound SSH (port 22) and HTTP (port 80) allowed
+- **Git installed:** Required to clone/pull the repository
+- **Public IP or DNS:** Needed for GitHub Actions to reach the instance
+
+The workflow will auto-install Docker on first run if it's missing.
+
+## Required GitHub secrets
+
+Set these in your repo → Settings → Secrets and variables → Actions:
+
+- `EC2_HOST` — your instance's public IP or DNS hostname
+- `EC2_USER` — SSH username (e.g., `ubuntu` for Ubuntu AMIs)
+- `EC2_KEY` — the private SSH key (PEM format) that has access to the instance
+- `EC2_PROJECT_PATH` — (optional) where to deploy the app; defaults to `/home/ubuntu/app`
+
+## Manual deployment script
+
+For faster iteration without pushing code, use the local deploy script:
 
 ```bash
-EC2_HOST=ec2-3-12-34-56.compute-1.amazonaws.com EC2_PROTOCOL=https npm run test:ec2
+EC2_HOST=52.90.239.180 EC2_SSH_USER=ubuntu EC2_SSH_KEY=~/.ssh/HR.pem ./scripts/deploy-remote.sh
 ```
 
-CI usage (GitHub Actions)
-
-- Add a repository secret named `EC2_HOST` with the host value (no protocol).
-- The included workflow `.github/workflows/ec2-check.yml` will use that secret to run the smoke check.
-
-Security notes
-
-- Do not commit private keys or credentials in the repository.
-- Only store the EC2 host (DNS/IP) as a secret — do not store SSH keys in this workflow.
-
-Troubleshooting
-
-- If the test is skipped in CI, ensure `EC2_HOST` is set in the repository or environment for the workflow run.
-- If fetch fails due to TLS, set `EC2_PROTOCOL` to `http` or ensure your instance serves a valid certificate.
-- Allow inbound HTTP/HTTPS (ports 80/443) in your EC2 security group for the test to reach the service.
+This is preferred when your EC2 IP changes frequently or you want to test deploys locally before committing.

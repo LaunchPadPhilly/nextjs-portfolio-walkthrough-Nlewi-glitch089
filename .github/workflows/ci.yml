@@ -23,6 +23,17 @@ jobs:
         run: |
           npm audit --audit-level=moderate || true
 
+  # ---------------------------------------------------------------------------
+  # JOB: build-and-test
+  # Purpose: Verify the app compiles and all tests pass before any deployment.
+  #   - Installs dependencies (npm ci)
+  #   - Generates Prisma client
+  #   - Runs the linter
+  #   - Runs unit/smoke tests (Vitest)
+  #   - Optionally spins up Docker + Postgres for integration tests
+  # Changes made: No structural changes. This job runs on every push to main
+  #   and develop, and must pass before the EC2 deploy job is allowed to run.
+  # ---------------------------------------------------------------------------
   build-and-test:
     needs: security-audit
     runs-on: ubuntu-latest
@@ -168,6 +179,20 @@ jobs:
         run: docker compose down -v
 
  
+  # ---------------------------------------------------------------------------
+  # JOB: setup-ec2-docker  ("Setup EC2 Docker & Start App")
+  # Purpose: Deploy the app to the live EC2 instance after tests pass.
+  #   - SSHes into EC2 using stored secrets
+  #   - Installs Docker on the instance if it is not already present
+  #   - Pulls the latest code from GitHub
+  #   - Runs docker compose up -d --build to rebuild and restart the container
+  # Changes made:
+  #   - Was previously disabled with if: ${{ false }} (caused the job to be
+  #     skipped every run — fixed by restoring the proper condition below)
+  #   - Added workflow_dispatch trigger so it can also be run manually
+  #   - ec2-check.yml and deploy-ssh.yml were removed; this job now handles
+  #     all automated EC2 deployment in one place
+  # ---------------------------------------------------------------------------
   setup-ec2-docker:
     name: Setup EC2 Docker & Start App
     runs-on: ubuntu-latest
