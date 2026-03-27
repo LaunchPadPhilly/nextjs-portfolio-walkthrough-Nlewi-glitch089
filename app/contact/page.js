@@ -5,7 +5,9 @@ export default function Contact() {
     <div className="site-container">
       <header style={{ marginBottom: '0.75rem' }}>
         <h1 style={{ fontSize: 'clamp(1.8rem,4.8vw,3rem)', fontWeight: 800 }}>Get In Touch</h1>
-        
+        <div style={{ marginTop: '0.5rem' }}>
+          <Link href="/" style={{ color: 'var(--accent2)', textDecoration: 'underline' }}>← Home</Link>
+        </div>
         <div style={{ color: 'var(--accent)', fontWeight: 600, marginTop: '0.5rem' }}>I&apos;d love to connect and talk about new opportunities, collaborations, or anything tech-related. Reach out anytime through the channels below!</div>
       </header>
 

@@ -362,11 +362,6 @@ a:focus {
   padding: 1.5rem;
 }
 
-/* Add extra right gutter on large screens so the right-hand aside isn't flush to the viewport */
-@media (min-width: 1100px) {
-  .site-container { padding-right: 5rem; }
-}
-
 .grid-two {
   display: grid;
   gap: 1rem;
@@ -374,11 +369,9 @@ a:focus {
   align-items: start;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1100px) {
   .grid-two { grid-template-columns: 1fr 360px; }
 }
-
-/* (removed centering override to preserve original full-width aside behavior) */
 
 .title-effect {
   position: relative;

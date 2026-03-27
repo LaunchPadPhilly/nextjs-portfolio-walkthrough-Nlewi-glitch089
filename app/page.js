@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import TitleEffect from './components/TitleEffect'
-import AsideAligner from './components/AsideAligner'
 
 export default function Home() {
   return (
@@ -33,13 +32,17 @@ export default function Home() {
         </section>
 
         <aside>
-          <AsideAligner offset={24}>
-            <div className="card reveal">
-              <div style={{ fontWeight: 800, color: 'var(--accent2)', marginBottom: '0.5rem' }}>Featured Project</div>
-              <p style={{ color: '#b6b6c8' }}>Nerd Street CRM — a donor relationship tool for nonprofits. It centralizes donors, donations, and engagement so teams stop relying on fragmented spreadsheets and manual follow-ups. Click to view the project or explore more on the Projects page.</p>
-              <Link href="/projects" className="btn-primary" style={{ display: 'inline-block', marginTop: '0.75rem' }}>See Projects</Link>
-            </div>
-          </AsideAligner>
+          <div className="featured-card reveal">
+            <div style={{ color: 'var(--accent3)', fontWeight: 700 }}>Featured</div>
+            <div style={{ fontWeight: 800, color: 'var(--foreground)', fontSize: '1.05rem' }}>Software Engineer</div>
+            <p style={{ marginTop: '0.5rem', color: '#b6b6c8' }}>Focused on accessible interactions and delightful micro-interactions. Currently exploring real-time collaboration and generative UI patterns.</p>
+          </div>
+
+          <div className="card reveal" style={{ marginTop: '1rem' }}>
+            <div style={{ fontWeight: 800, color: 'var(--accent2)', marginBottom: '0.5rem' }}>Featured Project</div>
+            <p style={{ color: '#b6b6c8' }}>Nerd Street CRM — a donor relationship tool for nonprofits. It centralizes donors, donations, and engagement so teams stop relying on fragmented spreadsheets and manual follow-ups. Click to view the project or explore more on the Projects page.</p>
+            <Link href="/projects" className="btn-primary" style={{ display: 'inline-block', marginTop: '0.75rem' }}>See Projects</Link>
+          </div>
         </aside>
       </div>
     </div>

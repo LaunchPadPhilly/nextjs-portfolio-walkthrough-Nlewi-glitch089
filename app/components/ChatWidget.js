@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import styles from './ChatWidget.module.css'
 import Image from 'next/image'
 
@@ -32,23 +31,6 @@ function clampPosition(nextPosition, isOpen) {
 function getDefaultPosition(isOpen) {
   if (typeof window === 'undefined') return { x: EDGE_PADDING, y: EDGE_PADDING }
   const { width, height } = getWidgetSize(isOpen)
-  // Try to align the widget vertically with the right-side aside (if present),
-  // so the closed chat bubble sits next to the project's card rather than mid-page.
-  try {
-    const aside = document.querySelector('.grid-two aside')
-    if (aside) {
-      const rect = aside.getBoundingClientRect()
-      // place the widget aligned to the top of the aside with a small offset
-      const yFromAside = Math.max(EDGE_PADDING, Math.round(rect.top + 24))
-      return {
-        x: Math.max(EDGE_PADDING, window.innerWidth - width - EDGE_PADDING),
-        y: Math.min(Math.max(EDGE_PADDING, yFromAside), Math.max(EDGE_PADDING, window.innerHeight - height - EDGE_PADDING)),
-      }
-    }
-  } catch (e) {
-    // fall back to bottom-right if anything goes wrong
-  }
-
   return {
     x: Math.max(EDGE_PADDING, window.innerWidth - width - EDGE_PADDING),
     y: Math.max(EDGE_PADDING, window.innerHeight - height - EDGE_PADDING),
@@ -326,7 +308,7 @@ export default function ChatWidget() {
 
   const widgetPosition = position
 
-  const widgetJsx = (
+  return (
     <>
       <div className={styles.anchor} style={{ left: widgetPosition.x, top: widgetPosition.y }}>
         {!open && (
@@ -410,11 +392,4 @@ export default function ChatWidget() {
       )}
     </>
   )
-
-  // Render into document.body so fixed positioning anchors to the viewport
-  if (typeof document !== 'undefined' && document.body) {
-    return createPortal(widgetJsx, document.body)
-  }
-
-  return widgetJsx
 }
