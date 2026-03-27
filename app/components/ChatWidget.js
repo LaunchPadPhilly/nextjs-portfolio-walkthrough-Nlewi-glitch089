@@ -305,6 +305,7 @@ export default function ChatWidget() {
   if (position === null) return null
 
   const widgetPosition = position
+  const anchorStyle = styleForPosition(widgetPosition, false, BUBBLE_SIZE)
 
   function styleForPosition(pos, isOpen, boxWidth) {
     if (typeof window === 'undefined') return { left: pos.x, top: pos.y }
@@ -333,7 +334,7 @@ export default function ChatWidget() {
 
   const jsx = (
     <>
-      <div className={styles.anchor} style={styleForPosition(widgetPosition, false, BUBBLE_SIZE)}>
+      <div className={styles.anchor} style={anchorStyle}>
         {!open && (
           <button className={styles.bubble} onClick={toggleOpen} aria-label="Open chat">
             🤖
@@ -346,7 +347,7 @@ export default function ChatWidget() {
           className={`${styles.panel} ${open ? styles.open : ''}`}
           role="dialog"
           aria-hidden={!open}
-          style={styleForPosition(widgetPosition, true)}
+          style={anchorStyle}
         >
           <div className={styles.header}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
