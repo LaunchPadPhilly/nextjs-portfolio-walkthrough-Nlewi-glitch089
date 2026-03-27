@@ -57,9 +57,10 @@ function getDefaultPosition(isOpen) {
     // eslint-disable-next-line no-console
     console.log('[ChatWidget] getDefaultPosition:', { isOpen, width, height, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
   } catch (e) {}
+  // Preview placement: anchor to left edge, ~25% down the viewport
   return {
-    x: Math.max(EDGE_PADDING, window.innerWidth - width - EDGE_PADDING),
-    y: Math.max(EDGE_PADDING, window.innerHeight - height - EDGE_PADDING),
+    x: EDGE_PADDING,
+    y: Math.max(EDGE_PADDING, Math.round(window.innerHeight * 0.25)),
   }
 }
 
@@ -333,7 +334,7 @@ export default function ChatWidget() {
     <>
       <div className={styles.anchor} style={styleForPosition(widgetPosition, false, BUBBLE_SIZE)}>
         {!open && (
-          <button className={styles.bubble} onClick={toggleOpen} onPointerDown={beginDrag} aria-label="Open chat">
+          <button className={styles.bubble} onClick={toggleOpen} aria-label="Open chat">
             🤖
           </button>
         )}
@@ -346,7 +347,7 @@ export default function ChatWidget() {
           aria-hidden={!open}
           style={styleForPosition(widgetPosition, true)}
         >
-          <div className={styles.header} onPointerDown={beginDrag}>
+          <div className={styles.header}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <div className={styles.avatar} aria-hidden>
                 <Image src={avatarPath || DEFAULT_AVATAR_PATH} alt="avatar" width={40} height={40} className={styles.avatarImg} onError={() => setAvatarPath(DEFAULT_AVATAR_PATH)} />
