@@ -308,9 +308,25 @@ export default function ChatWidget() {
 
   const widgetPosition = position
 
+  function styleForPosition(pos, isOpen, boxWidth) {
+    if (typeof window === 'undefined') return { left: pos.x, top: pos.y }
+    const w = boxWidth || getWidgetSize(isOpen).width
+    // prefer left/top but fall back to right/bottom if there's any chance of clipping
+    const fitsRight = pos.x + w + EDGE_PADDING <= window.innerWidth
+    const fitsBottom = pos.y + (getWidgetSize(isOpen).height || DEFAULT_PANEL_HEIGHT) + EDGE_PADDING <= window.innerHeight
+    if (fitsRight && fitsBottom) return { left: pos.x, top: pos.y }
+    // if doesn't fit right, anchor to right edge
+    const style = {}
+    if (!fitsRight) style.right = EDGE_PADDING
+    else style.left = pos.x
+    if (!fitsBottom) style.bottom = EDGE_PADDING
+    else style.top = pos.y
+    return style
+  }
+
   return (
     <>
-      <div className={styles.anchor} style={{ left: widgetPosition.x, top: widgetPosition.y }}>
+      <div className={styles.anchor} style={styleForPosition(widgetPosition, false, BUBBLE_SIZE)}>
         {!open && (
           <button className={styles.bubble} onClick={toggleOpen} onPointerDown={beginDrag} aria-label="Open chat">
             🤖
@@ -323,7 +339,7 @@ export default function ChatWidget() {
           className={`${styles.panel} ${open ? styles.open : ''}`}
           role="dialog"
           aria-hidden={!open}
-          style={{ left: widgetPosition.x, top: widgetPosition.y }}
+          style={styleForPosition(widgetPosition, true)}
         >
           <div className={styles.header} onPointerDown={beginDrag}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
