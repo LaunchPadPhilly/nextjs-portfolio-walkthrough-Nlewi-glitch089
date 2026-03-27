@@ -318,7 +318,9 @@ export default function ChatWidget() {
   const rawTop = widgetPosition.y - panelSize.height - pad - extraOffset
   const panelTop = Math.max(EDGE_PADDING, rawTop)
   const panelLeft = widgetPosition.x
-  const panelStyle = { left: panelLeft, top: panelTop }
+  // Force fixed positioning, no transform, and top/left inline so panel behaves
+  // exactly like the bubble (not affected by page stacking contexts).
+  const panelStyle = { left: panelLeft, top: panelTop, position: 'fixed', zIndex: 2147483647, transform: 'none' }
 
   function styleForPosition(pos, isOpen, boxWidth) {
     if (typeof window === 'undefined') return { left: pos.x, top: pos.y }
