@@ -313,7 +313,9 @@ export default function ChatWidget() {
   // This guarantees the panel follows the bubble and avoids interacting with
   // other page anchoring logic that previously caused the panel to remain at bottom.
   const pad = 12
-  const rawTop = widgetPosition.y - panelSize.height - pad
+  // Nudge the panel further upward so it clears the bubble and footer reliably
+  const extraOffset = 40
+  const rawTop = widgetPosition.y - panelSize.height - pad - extraOffset
   const panelTop = Math.max(EDGE_PADDING, rawTop)
   const panelLeft = widgetPosition.x
   const panelStyle = { left: panelLeft, top: panelTop }
