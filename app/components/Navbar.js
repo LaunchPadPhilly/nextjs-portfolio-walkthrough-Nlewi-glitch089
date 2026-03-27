@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import styles from './Navbar.module.css'
 import ToastHost from './ToastHost'
 import AdminSignInForm from './AdminSignInForm'
@@ -70,14 +71,15 @@ export default function Navbar() {
       </div>
 
       {/* Admin sign-in modal (opened by clicking profile image) */}
-      {adminOpen && (
+      {adminOpen && typeof document !== 'undefined' && createPortal(
         <div className={styles.adminModalOverlay} onClick={() => setAdminOpen(false)}>
           <div className={styles.adminModal} onClick={(e) => e.stopPropagation()}>
             <h3 style={{ margin: 0 }}>Admin sign in</h3>
             <p style={{ color: '#9aa0b4' }}>Enter the admin password to access the admin area.</p>
             <AdminSignInForm onSuccess={() => { setAdminOpen(false); window.location.href = '/admin' }} onCancel={() => setAdminOpen(false)} compact />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
 
