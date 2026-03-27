@@ -10,7 +10,7 @@ const EDGE_PADDING = 16
 const BUBBLE_SIZE = 56
 const DEFAULT_PANEL_WIDTH = 380
 const DEFAULT_PANEL_HEIGHT = 560
-const POSITION_STORAGE_KEY = 'chatWidgetPositionV1'
+// position persistence removed — widget anchors to code-defined defaults
 let __chatWidget_anchorLogged = false
 
 async function postDebug(payload) {
@@ -103,6 +103,7 @@ export default function ChatWidget() {
     // Mount a client-side portal to ensure fixed positioning is relative to the
     // viewport (not to any transformed parent elements that can appear in prod).
     setPortalMounted(true)
+    // No persistence: ensure widget always uses the code-defined anchor
 
     ;(async () => {
       try {
