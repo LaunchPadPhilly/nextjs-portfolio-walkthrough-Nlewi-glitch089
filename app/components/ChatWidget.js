@@ -309,35 +309,14 @@ export default function ChatWidget() {
   // Compute panel style so it opens above the bubble to avoid overlap.
   // Use the same anchor (left/right + top/bottom) and shift the panel above
   const panelSize = getWidgetSize(true)
-  function computePanelStyleFromAnchor(a) {
-    const pad = 12
-    // prefer left/right symmetry based on anchor
-    if (a.left != null) {
-      if (a.top != null) {
-        const top = Math.max(EDGE_PADDING, a.top - panelSize.height - pad)
-        return { left: a.left, top }
-      }
-      if (a.bottom != null) {
-        const bottom = (typeof a.bottom === 'number' ? a.bottom : EDGE_PADDING) + BUBBLE_SIZE + pad
-        return { left: a.left, bottom }
-      }
-      return { left: a.left, top: Math.max(EDGE_PADDING, widgetPosition.y - panelSize.height - pad) }
-    }
-    if (a.right != null) {
-      if (a.top != null) {
-        const top = Math.max(EDGE_PADDING, a.top - panelSize.height - pad)
-        return { right: a.right, top }
-      }
-      if (a.bottom != null) {
-        const bottom = (typeof a.bottom === 'number' ? a.bottom : EDGE_PADDING) + BUBBLE_SIZE + pad
-        return { right: a.right, bottom }
-      }
-      return { right: a.right, top: Math.max(EDGE_PADDING, widgetPosition.y - panelSize.height - pad) }
-    }
-    // fallback
-    return { left: widgetPosition.x, top: Math.max(EDGE_PADDING, widgetPosition.y - panelSize.height - pad) }
-  }
-  const panelStyle = computePanelStyleFromAnchor(anchorStyle)
+  // Simpler: anchor the panel directly above the bubble's computed widgetPosition.
+  // This guarantees the panel follows the bubble and avoids interacting with
+  // other page anchoring logic that previously caused the panel to remain at bottom.
+  const pad = 12
+  const rawTop = widgetPosition.y - panelSize.height - pad
+  const panelTop = Math.max(EDGE_PADDING, rawTop)
+  const panelLeft = widgetPosition.x
+  const panelStyle = { left: panelLeft, top: panelTop }
 
   function styleForPosition(pos, isOpen, boxWidth) {
     if (typeof window === 'undefined') return { left: pos.x, top: pos.y }
