@@ -306,6 +306,13 @@ export default function ChatWidget() {
 
   const widgetPosition = position
   const anchorStyle = styleForPosition(widgetPosition, false, BUBBLE_SIZE)
+  // Compute panel style so it opens above the bubble to avoid overlap
+  const panelSize = getWidgetSize(true)
+  const panelStyle = (() => {
+    if (typeof window === 'undefined') return { left: widgetPosition.x, top: Math.max(EDGE_PADDING, widgetPosition.y - panelSize.height - 12) }
+    const top = Math.max(EDGE_PADDING, widgetPosition.y - panelSize.height - 12)
+    return { left: widgetPosition.x, top }
+  })()
 
   function styleForPosition(pos, isOpen, boxWidth) {
     if (typeof window === 'undefined') return { left: pos.x, top: pos.y }
@@ -347,7 +354,7 @@ export default function ChatWidget() {
           className={`${styles.panel} ${open ? styles.open : ''}`}
           role="dialog"
           aria-hidden={!open}
-          style={anchorStyle}
+          style={panelStyle}
         >
           <div className={styles.header}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
