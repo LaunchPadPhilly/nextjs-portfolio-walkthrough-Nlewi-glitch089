@@ -52,7 +52,7 @@ export default function Contact() {
         <aside style={{ display: 'grid', gap: '0.75rem' }}>
           <div className="card">
             <div style={{ fontWeight: 800, color: 'var(--accent2)', marginBottom: '0.5rem' }}>Availability</div>
-            <p style={{ fontSize: '1.03rem', color: 'var(--foreground)', lineHeight: 1.72 }}>Open to freelance and collaborative projects — best reached by email. Typical response time: 1–3 business days.</p>
+            <p style={{ fontSize: '1.03rem', color: 'var(--foreground)', lineHeight: 1.72 }}>Open to freelance and collaborative projects, best reached by email. Typical response time: 1–5 business days.</p>
           </div>
 
           <div className="card">
