@@ -1,7 +1,7 @@
 .anchor {
-  position: fixed;
-  /* Ensure the widget sits above page elements (footers, overlays) */
-  z-index: 99990;
+  position: fixed !important;
+  /* Force the widget above all page stacking contexts */
+  z-index: 2147483647 !important;
 }
 
 .bubble {
@@ -37,7 +37,7 @@
   flex-direction: column;
   overflow: hidden;
   /* Keep the expanded panel above the bubble and other page content */
-  z-index: 99999;
+  z-index: 2147483647 !important;
 }
 
 .open {
