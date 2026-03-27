@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import styles from './ChatWidget.module.css'
 import Image from 'next/image'
 
@@ -9,6 +10,21 @@ const EDGE_PADDING = 16
 const BUBBLE_SIZE = 56
 const DEFAULT_PANEL_WIDTH = 380
 const DEFAULT_PANEL_HEIGHT = 560
+const POSITION_STORAGE_KEY = 'chatWidgetPositionV1'
+let __chatWidget_anchorLogged = false
+
+async function postDebug(payload) {
+  try {
+    // Keep payload small and non-sensitive
+    await fetch('/api/debug', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  } catch (e) {
+    // swallow errors silently
+  }
+}
 
 function getWidgetSize(isOpen) {
   if (typeof window === 'undefined') return { width: DEFAULT_PANEL_WIDTH, height: DEFAULT_PANEL_HEIGHT }
@@ -22,6 +38,11 @@ function getWidgetSize(isOpen) {
 function clampPosition(nextPosition, isOpen) {
   if (typeof window === 'undefined') return nextPosition
   const { width, height } = getWidgetSize(isOpen)
+  try {
+    // Debug: log incoming and computed bounds
+    // eslint-disable-next-line no-console
+    console.log('[ChatWidget] clampPosition input:', { nextPosition, width, height, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
+  } catch (e) {}
   return {
     x: Math.min(Math.max(EDGE_PADDING, nextPosition.x), Math.max(EDGE_PADDING, window.innerWidth - width - EDGE_PADDING)),
     y: Math.min(Math.max(EDGE_PADDING, nextPosition.y), Math.max(EDGE_PADDING, window.innerHeight - height - EDGE_PADDING)),
@@ -31,6 +52,11 @@ function clampPosition(nextPosition, isOpen) {
 function getDefaultPosition(isOpen) {
   if (typeof window === 'undefined') return { x: EDGE_PADDING, y: EDGE_PADDING }
   const { width, height } = getWidgetSize(isOpen)
+  try {
+    // Debug: log default position calculation
+    // eslint-disable-next-line no-console
+    console.log('[ChatWidget] getDefaultPosition:', { isOpen, width, height, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
+  } catch (e) {}
   return {
     x: Math.max(EDGE_PADDING, window.innerWidth - width - EDGE_PADDING),
     y: Math.max(EDGE_PADDING, window.innerHeight - height - EDGE_PADDING),
@@ -58,6 +84,7 @@ Response style rules:
 When appropriate, recommend which project the visitor should view next.`
 
 export default function ChatWidget() {
+  const [portalMounted, setPortalMounted] = useState(false)
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState([{ role: 'system', content: DEFAULT_SYSTEM_PROMPT }])
@@ -73,6 +100,10 @@ export default function ChatWidget() {
   const dragMovedRef = useRef(false)
 
   useEffect(() => {
+    // Mount a client-side portal to ensure fixed positioning is relative to the
+    // viewport (not to any transformed parent elements that can appear in prod).
+    setPortalMounted(true)
+
     ;(async () => {
       try {
         const response = await fetch('/api/context')
@@ -108,7 +139,25 @@ export default function ChatWidget() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
-    setPosition(current => clampPosition(current || getDefaultPosition(open), open))
+
+    // Try to restore saved position from localStorage (persist across refreshes and deploys)
+    try {
+      const raw = window.localStorage.getItem(POSITION_STORAGE_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (parsed && typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          console.log('[ChatWidget] Restoring position from localStorage:', parsed)
+          setPosition(() => clampPosition(parsed, open))
+          try { postDebug({ event: 'restore', parsed, pathname: window.location.pathname }) } catch (e) {}
+        } else {
+          setPosition(current => clampPosition(current || getDefaultPosition(open), open))
+        }
+      } else {
+        setPosition(current => clampPosition(current || getDefaultPosition(open), open))
+      }
+    } catch (e) {
+      setPosition(current => clampPosition(current || getDefaultPosition(open), open))
+    }
 
     function handleResize() {
       setPosition(current => clampPosition(current || getDefaultPosition(open), open))
@@ -118,34 +167,52 @@ export default function ChatWidget() {
     return () => window.removeEventListener('resize', handleResize)
   }, [open])
 
+  // Persist position to localStorage so the widget remains where the user left it
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      if (position && typeof position.x === 'number' && typeof position.y === 'number') {
+        window.localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify(position))
+        console.log('[ChatWidget] Saved position to localStorage:', position)
+        try { postDebug({ event: 'save', position, pathname: window.location.pathname }) } catch (e) {}
+      }
+    } catch (e) {}
+  }, [position])
+
+  // Restrict dragging to visible area only
   useEffect(() => {
     function handlePointerMove(event) {
-      const dragState = dragStateRef.current
-      if (!dragState) return
-      if (Math.abs(event.clientX - dragState.startX) > 4 || Math.abs(event.clientY - dragState.startY) > 4) {
-        dragMovedRef.current = true
+      const dragState = dragStateRef.current;
+      if (!dragState) return;
+      if (
+        Math.abs(event.clientX - dragState.startX) > 4 ||
+        Math.abs(event.clientY - dragState.startY) > 4
+      ) {
+        dragMovedRef.current = true;
       }
-      const nextPosition = {
+      let nextPosition = {
         x: dragState.originX + (event.clientX - dragState.startX),
         y: dragState.originY + (event.clientY - dragState.startY),
-      }
-      setPosition(clampPosition(nextPosition, open))
+      };
+      // Clamp to visible area
+      nextPosition = clampPosition(nextPosition, open);
+      setPosition(nextPosition);
     }
 
     function handlePointerUp() {
-      dragStateRef.current = null
+      dragStateRef.current = null;
       window.setTimeout(() => {
-        dragMovedRef.current = false
-      }, 0)
+        dragMovedRef.current = false;
+      }, 0);
     }
 
-    window.addEventListener('pointermove', handlePointerMove)
-    window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
     return () => {
-      window.removeEventListener('pointermove', handlePointerMove)
-      window.removeEventListener('pointerup', handlePointerUp)
-    }
-  }, [open])
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (open && endRef.current) endRef.current.scrollIntoView({ behavior: 'smooth' })
@@ -281,18 +348,19 @@ export default function ChatWidget() {
   }
 
   function beginDrag(event) {
-    if (event.button !== 0) return
-    const interactiveTarget = event.target.closest('button, input, textarea, a')
-    if (open && interactiveTarget) return
-    dragMovedRef.current = false
-    const currentPosition = position || getDefaultPosition(open)
+    if (event.button !== 0) return;
+    // Only allow drag from header or bubble, not from inside form/buttons/inputs
+    const dragHandle = event.target.closest('.' + styles.header + ',.' + styles.bubble);
+    if (!dragHandle) return;
+    dragMovedRef.current = false;
+    const currentPosition = position || getDefaultPosition(open);
     dragStateRef.current = {
       startX: event.clientX,
       startY: event.clientY,
       originX: currentPosition.x,
       originY: currentPosition.y,
-    }
-    event.preventDefault()
+    };
+    event.preventDefault();
   }
 
   function toggleOpen() {
@@ -314,6 +382,15 @@ export default function ChatWidget() {
     // prefer left/top but fall back to right/bottom if there's any chance of clipping
     const fitsRight = pos.x + w + EDGE_PADDING <= window.innerWidth
     const fitsBottom = pos.y + (getWidgetSize(isOpen).height || DEFAULT_PANEL_HEIGHT) + EDGE_PADDING <= window.innerHeight
+    try {
+      // Debug: log anchoring decision
+      // eslint-disable-next-line no-console
+      console.log('[ChatWidget] styleForPosition:', { pos, isOpen, w, fitsRight, fitsBottom, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
+      if (!__chatWidget_anchorLogged) {
+        __chatWidget_anchorLogged = true
+        try { postDebug({ event: 'anchor', pos, isOpen, w, fitsRight, fitsBottom, innerWidth: window.innerWidth, innerHeight: window.innerHeight, pathname: window.location.pathname }) } catch (e) {}
+      }
+    } catch (e) {}
     if (fitsRight && fitsBottom) return { left: pos.x, top: pos.y }
     // if doesn't fit right, anchor to right edge
     const style = {}
@@ -324,7 +401,7 @@ export default function ChatWidget() {
     return style
   }
 
-  return (
+  const jsx = (
     <>
       <div className={styles.anchor} style={styleForPosition(widgetPosition, false, BUBBLE_SIZE)}>
         {!open && (
@@ -408,4 +485,7 @@ export default function ChatWidget() {
       )}
     </>
   )
+
+  if (!portalMounted) return null
+  return createPortal(jsx, typeof document !== 'undefined' ? document.body : null)
 }
