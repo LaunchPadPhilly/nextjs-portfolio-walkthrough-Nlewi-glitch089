@@ -96,8 +96,7 @@ export default function ChatWidget() {
   const endRef = useRef(null)
   const audioCtxRef = useRef(null)
   const typingIntervalRef = useRef(null)
-  const dragStateRef = useRef(null)
-  const dragMovedRef = useRef(false)
+  // Dragging removed — widget will be static anchored to viewport
 
   useEffect(() => {
     // Mount a client-side portal to ensure fixed positioning is relative to the
@@ -139,80 +138,21 @@ export default function ChatWidget() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
-
-    // Try to restore saved position from localStorage (persist across refreshes and deploys)
-    try {
-      const raw = window.localStorage.getItem(POSITION_STORAGE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (parsed && typeof parsed.x === 'number' && typeof parsed.y === 'number') {
-          console.log('[ChatWidget] Restoring position from localStorage:', parsed)
-          setPosition(() => clampPosition(parsed, open))
-          try { postDebug({ event: 'restore', parsed, pathname: window.location.pathname }) } catch (e) {}
-        } else {
-          setPosition(current => clampPosition(current || getDefaultPosition(open), open))
-        }
-      } else {
-        setPosition(current => clampPosition(current || getDefaultPosition(open), open))
-      }
-    } catch (e) {
-      setPosition(current => clampPosition(current || getDefaultPosition(open), open))
-    }
+    // Always anchor to default bottom-right position; do not persist or restore.
+    setPosition(getDefaultPosition(open))
 
     function handleResize() {
-      setPosition(current => clampPosition(current || getDefaultPosition(open), open))
+      setPosition(getDefaultPosition(open))
     }
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [open])
 
-  // Persist position to localStorage so the widget remains where the user left it
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    try {
-      if (position && typeof position.x === 'number' && typeof position.y === 'number') {
-        window.localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify(position))
-        console.log('[ChatWidget] Saved position to localStorage:', position)
-        try { postDebug({ event: 'save', position, pathname: window.location.pathname }) } catch (e) {}
-      }
-    } catch (e) {}
-  }, [position])
+  // No persistence — keep widget static
 
   // Restrict dragging to visible area only
-  useEffect(() => {
-    function handlePointerMove(event) {
-      const dragState = dragStateRef.current;
-      if (!dragState) return;
-      if (
-        Math.abs(event.clientX - dragState.startX) > 4 ||
-        Math.abs(event.clientY - dragState.startY) > 4
-      ) {
-        dragMovedRef.current = true;
-      }
-      let nextPosition = {
-        x: dragState.originX + (event.clientX - dragState.startX),
-        y: dragState.originY + (event.clientY - dragState.startY),
-      };
-      // Clamp to visible area
-      nextPosition = clampPosition(nextPosition, open);
-      setPosition(nextPosition);
-    }
-
-    function handlePointerUp() {
-      dragStateRef.current = null;
-      window.setTimeout(() => {
-        dragMovedRef.current = false;
-      }, 0);
-    }
-
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-    };
-  }, [open]);
+  // dragging removed — no pointer listeners
 
   useEffect(() => {
     if (open && endRef.current) endRef.current.scrollIntoView({ behavior: 'smooth' })
@@ -347,24 +287,12 @@ export default function ChatWidget() {
     try { window.dispatchEvent(new CustomEvent('showToast', { detail: { message: 'Cleared', type: 'info' } })) } catch (e) {}
   }
 
-  function beginDrag(event) {
-    if (event.button !== 0) return;
-    // Only allow drag from header or bubble, not from inside form/buttons/inputs
-    const dragHandle = event.target.closest('.' + styles.header + ',.' + styles.bubble);
-    if (!dragHandle) return;
-    dragMovedRef.current = false;
-    const currentPosition = position || getDefaultPosition(open);
-    dragStateRef.current = {
-      startX: event.clientX,
-      startY: event.clientY,
-      originX: currentPosition.x,
-      originY: currentPosition.y,
-    };
-    event.preventDefault();
+  function beginDrag() {
+    // no-op: dragging disabled
+    return
   }
 
   function toggleOpen() {
-    if (dragMovedRef.current) return
     setOpen(current => !current)
   }
 

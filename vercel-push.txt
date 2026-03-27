@@ -1,0 +1,8 @@
+Running pre-push deploy checks: npm run check:env
+
+> week1-portfolio-starter@1.0.0 check:env
+> node scripts/validate-env.js
+
+.env looks ok
+Pre-push deploy checks passed. Proceeding with push.
+Everything up-to-date
