@@ -8,7 +8,7 @@ export default function Contact() {
         <div style={{ marginTop: '0.5rem' }}>
           <Link href="/" style={{ color: 'var(--accent2)', textDecoration: 'underline' }}>← Home</Link>
         </div>
-        <div style={{ color: 'var(--accent)', fontWeight: 600, marginTop: '0.5rem' }}>I&apos;d love to connect and talk about new opportunities, collaborations, or anything tech-related. Reach out anytime through the channels below!</div>
+        <div style={{ color: 'var(--accent)', fontWeight: 600, marginTop: '0.5rem' }}>I&apos;d love to connect and talk about new opportunities, collaborations, or anything tech-related. Reach out anytime through the platforms below!</div>
       </header>
 
       <div className="grid-two">
