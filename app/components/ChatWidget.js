@@ -50,17 +50,17 @@ function clampPosition(nextPosition, isOpen) {
 }
 
 function getDefaultPosition(isOpen) {
-  if (typeof window === 'undefined') return { x: EDGE_PADDING, y: EDGE_PADDING }
+  if (typeof window === 'undefined') return { x: window.innerWidth - EDGE_PADDING - 56, y: window.innerHeight - EDGE_PADDING - 56 }
   const { width, height } = getWidgetSize(isOpen)
   try {
     // Debug: log default position calculation
     // eslint-disable-next-line no-console
     console.log('[ChatWidget] getDefaultPosition:', { isOpen, width, height, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
   } catch (e) {}
-  // Preview placement: anchor to left edge, ~25% down the viewport
+  // Position on the right side, bottom-right corner
   return {
-    x: EDGE_PADDING,
-    y: Math.max(EDGE_PADDING, Math.round(window.innerHeight * 0.25)),
+    x: Math.max(EDGE_PADDING, window.innerWidth - width - EDGE_PADDING),
+    y: Math.max(EDGE_PADDING, window.innerHeight - BUBBLE_SIZE - EDGE_PADDING),
   }
 }
 
@@ -306,18 +306,16 @@ export default function ChatWidget() {
 
   const widgetPosition = position
   const anchorStyle = styleForPosition(widgetPosition, false, BUBBLE_SIZE)
-  // Compute panel style so it opens above the bubble to avoid overlap.
-  // Use the same anchor (left/right + top/bottom) and shift the panel above
+  // Compute panel style so it opens above the bubble and to the left
+  // This ensures the panel doesn't overlap with the bubble or push off-screen
   const panelSize = getWidgetSize(true)
-  // Simpler: anchor the panel directly above the bubble's computed widgetPosition.
-  // This guarantees the panel follows the bubble and avoids interacting with
-  // other page anchoring logic that previously caused the panel to remain at bottom.
+  // Position panel above the bubble on the right side
   const pad = 12
-  // Nudge the panel further upward so it clears the bubble and footer reliably
   const extraOffset = 40
   const rawTop = widgetPosition.y - panelSize.height - pad - extraOffset
   const panelTop = Math.max(EDGE_PADDING, rawTop)
-  const panelLeft = widgetPosition.x
+  // Panel's right edge should align with the bubble's right edge, accounting for width
+  const panelLeft = widgetPosition.x + BUBBLE_SIZE - panelSize.width
   // Force fixed positioning, no transform, and top/left inline so panel behaves
   // exactly like the bubble (not affected by page stacking contexts).
   const panelStyle = { left: panelLeft, top: panelTop, position: 'fixed', zIndex: 2147483647, transform: 'none' }
