@@ -1,9 +1,8 @@
 import './globals.css'
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
 import ClientParallaxWrapper from './components/ClientParallaxWrapper'
 import ScrollReveal from './components/ScrollReveal'
-import ChatWidget from './components/ChatWidget'
+import SideNavigation from './components/SideNavigation'
+import DockedChatbot from './components/DockedChatbot'
 
 export const metadata = {
   title: 'My Portfolio',
@@ -17,15 +16,17 @@ export default function RootLayout({ children }) {
         {/* animated background layers (client) */}
         <ClientParallaxWrapper />
 
-        <Navbar />
+        {/* Dual panel layout */}
+        <SideNavigation />
 
-        <main>
-          {children}
-        </main>
-
-        <Footer />
-
-        <ChatWidget />
+        <div className="main-content-wrapper">
+          <div className="central-content">
+            <main>
+              {children}
+            </main>
+          </div>
+          <DockedChatbot />
+        </div>
 
         <ScrollReveal />
       </body>
