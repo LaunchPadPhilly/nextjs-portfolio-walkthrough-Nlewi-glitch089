@@ -118,5 +118,23 @@
       "innerHeight": 490,
       "pathname": "/"
     }
+  },
+  {
+    "timestamp": "2026-04-24T15:01:08.341Z",
+    "origin": "chat-widget",
+    "payload": {
+      "event": "anchor",
+      "pos": {
+        "x": 16,
+        "y": 150
+      },
+      "isOpen": false,
+      "w": 56,
+      "fitsRight": true,
+      "fitsBottom": true,
+      "innerWidth": 1312,
+      "innerHeight": 600,
+      "pathname": "/"
+    }
   }
 ]

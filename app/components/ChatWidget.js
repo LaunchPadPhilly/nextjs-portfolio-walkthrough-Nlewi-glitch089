@@ -351,30 +351,31 @@ export default function ChatWidget() {
     <>
       <div className={styles.anchor} style={anchorStyle}>
         {!open && (
-          <button className={styles.bubble} onClick={toggleOpen} aria-label="Open chat">
-            🤖
+          <button className={styles.bubble} onClick={toggleOpen} aria-label="Ask AI">
+            <span>✨</span>
+            <span className={styles.bubbleLabel}>Ask AI</span>
           </button>
         )}
       </div>
 
       {open && (
         <div
-          className={`${styles.panel} ${open ? styles.open : ''}`}
+          className={`${styles.panel} ${styles.open}`}
           role="dialog"
           aria-hidden={!open}
           style={panelStyle}
         >
           <div className={styles.header}>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div className={styles.headerAvatar}>
               <div className={styles.avatar} aria-hidden>
                 <Image src={avatarPath || DEFAULT_AVATAR_PATH} alt="avatar" width={40} height={40} className={styles.avatarImg} onError={() => setAvatarPath(DEFAULT_AVATAR_PATH)} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <strong>Nakerra&apos;s AI Guide</strong>
-                <small style={{ color: 'rgba(255,255,255,0.6)' }}>Ask about projects, skills, or hiring</small>
+              <div>
+                <div><strong>Nakerra&apos;s AI Guide</strong></div>
+                <div className={styles.headerSubtitle}>Ask about my projects, skills, or experience</div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div className={styles.headerControls}>
               <button className={styles.iconBtn} title="Save conversation" onClick={saveConversation}>💾</button>
               <button className={styles.iconBtn} title="Download conversation" onClick={downloadConversation}>⬇️</button>
               <button className={styles.iconBtn} title="Clear conversation" onClick={clearConversation}>🗑️</button>
