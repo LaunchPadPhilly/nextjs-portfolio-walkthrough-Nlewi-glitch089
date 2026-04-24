@@ -1,5 +1,5 @@
 import './globals.css'
-import ClientParallaxWrapper from './components/ClientParallexWrapper'
+import ClientParallaxWrapper from './components/ClientParallaxWrapper'
 import ScrollReveal from './components/ScrollReveal'
 import SideNavigation from './components/SideNavigation'
 import ChatWidget from './components/ChatWidget'
