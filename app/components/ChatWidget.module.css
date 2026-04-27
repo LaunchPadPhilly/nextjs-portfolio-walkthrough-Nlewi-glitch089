@@ -434,43 +434,6 @@
   }
 }
 
-/* Typing indicator - smooth and polished */
-.ellipsis {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.ellipsis span {
-  width: 6px;
-  height: 6px;
-  background: #34d399;
-  border-radius: 50%;
-  display: inline-block;
-  opacity: 0.6;
-  transform: translateY(0);
-  animation: ell 900ms infinite ease-in-out;
-}
-
-.ellipsis span:nth-child(2) {
-  animation-delay: 120ms;
-}
-
-.ellipsis span:nth-child(3) {
-  animation-delay: 240ms;
-}
-
-@keyframes ell {
-  0%, 80%, 100% {
-    transform: translateY(0);
-    opacity: 0.6;
-  }
-  40% {
-    transform: translateY(-6px);
-    opacity: 1;
-  }
-}
-
 /* Responsive design - maintain bottom-right anchor */
 @media (max-width: 640px) {
   .panel {
