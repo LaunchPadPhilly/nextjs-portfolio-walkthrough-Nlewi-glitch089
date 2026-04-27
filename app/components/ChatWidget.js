@@ -50,18 +50,9 @@ function clampPosition(nextPosition, isOpen) {
 }
 
 function getDefaultPosition(isOpen) {
-  if (typeof window === 'undefined') return { x: window.innerWidth - EDGE_PADDING - 56, y: window.innerHeight - EDGE_PADDING - 56 }
-  const { width, height } = getWidgetSize(isOpen)
-  try {
-    // Debug: log default position calculation
-    // eslint-disable-next-line no-console
-    console.log('[ChatWidget] getDefaultPosition:', { isOpen, width, height, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
-  } catch (e) {}
-  // Position on the right side, bottom-right corner
-  return {
-    x: Math.max(EDGE_PADDING, window.innerWidth - width - EDGE_PADDING),
-    y: Math.max(EDGE_PADDING, window.innerHeight - BUBBLE_SIZE - EDGE_PADDING),
-  }
+  if (typeof window === 'undefined') return { x: 0, y: 0 }
+  // Always return bottom-right anchor (0, 0) - actual positioning done via CSS with right/bottom
+  return { x: 0, y: 0 }
 }
 
 function normalizeAvatarPath(path) {
@@ -304,64 +295,28 @@ export default function ChatWidget() {
   // with no flash or jump to the top-left fallback.
   if (position === null) return null
 
-  const widgetPosition = position
-  const anchorStyle = styleForPosition(widgetPosition, false, BUBBLE_SIZE)
-  // Compute panel style so it opens above the bubble and to the left
-  // This ensures the panel doesn't overlap with the bubble or push off-screen
-  const panelSize = getWidgetSize(true)
-  // Position panel above the bubble on the right side
-  const pad = 12
-  const extraOffset = 40
-  const rawTop = widgetPosition.y - panelSize.height - pad - extraOffset
-  const panelTop = Math.max(EDGE_PADDING, rawTop)
-  // Panel's right edge should align with the bubble's right edge, accounting for width
-  const panelLeft = widgetPosition.x + BUBBLE_SIZE - panelSize.width
-  // Force fixed positioning, no transform, and top/left inline so panel behaves
-  // exactly like the bubble (not affected by page stacking contexts).
-  const panelStyle = { left: panelLeft, top: panelTop, position: 'fixed', zIndex: 2147483647, transform: 'none' }
-
-  function styleForPosition(pos, isOpen, boxWidth) {
-    if (typeof window === 'undefined') return { left: pos.x, top: pos.y }
-    const w = boxWidth || getWidgetSize(isOpen).width
-    // prefer left/top but fall back to right/bottom if there's any chance of clipping
-    const fitsRight = pos.x + w + EDGE_PADDING <= window.innerWidth
-    const fitsBottom = pos.y + (getWidgetSize(isOpen).height || DEFAULT_PANEL_HEIGHT) + EDGE_PADDING <= window.innerHeight
-    try {
-      // Debug: log anchoring decision
-      // eslint-disable-next-line no-console
-      console.log('[ChatWidget] styleForPosition:', { pos, isOpen, w, fitsRight, fitsBottom, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
-      if (!__chatWidget_anchorLogged) {
-        __chatWidget_anchorLogged = true
-        try { postDebug({ event: 'anchor', pos, isOpen, w, fitsRight, fitsBottom, innerWidth: window.innerWidth, innerHeight: window.innerHeight, pathname: window.location.pathname }) } catch (e) {}
-      }
-    } catch (e) {}
-    if (fitsRight && fitsBottom) return { left: pos.x, top: pos.y }
-    // if doesn't fit right, anchor to right edge
-    const style = {}
-    if (!fitsRight) style.right = EDGE_PADDING
-    else style.left = pos.x
-    if (!fitsBottom) style.bottom = EDGE_PADDING
-    else style.top = pos.y
-    return style
+  const wrapperStyle = {
+    position: 'fixed',
+    right: 24,
+    bottom: 24,
+    zIndex: 2147483647,
+    pointerEvents: 'auto',
   }
 
   const jsx = (
-    <>
-      <div className={styles.anchor} style={anchorStyle}>
-        {!open && (
-          <button className={styles.bubble} onClick={toggleOpen} aria-label="Ask AI">
-            <span>✨</span>
-            <span className={styles.bubbleLabel}>Ask AI</span>
-          </button>
-        )}
-      </div>
+    <div style={wrapperStyle}>
+      {!open && (
+        <button className={styles.bubble} onClick={toggleOpen} aria-label="Ask AI">
+          <span>✨</span>
+          <span className={styles.bubbleLabel}>Ask AI</span>
+        </button>
+      )}
 
       {open && (
         <div
           className={`${styles.panel} ${styles.open}`}
           role="dialog"
           aria-hidden={!open}
-          style={panelStyle}
         >
           <div className={styles.header}>
             <div className={styles.headerAvatar}>
@@ -428,7 +383,7 @@ export default function ChatWidget() {
           <div className={styles.footer}>Powered by AI</div>
         </div>
       )}
-    </>
+    </div>
   )
 
   if (!portalMounted) return null

@@ -34,5 +34,41 @@
       "innerHeight": 490,
       "pathname": "/"
     }
+  },
+  {
+    "timestamp": "2026-04-27T13:18:49.535Z",
+    "origin": "chat-widget",
+    "payload": {
+      "event": "anchor",
+      "pos": {
+        "x": 898,
+        "y": 418
+      },
+      "isOpen": false,
+      "w": 56,
+      "fitsRight": true,
+      "fitsBottom": true,
+      "innerWidth": 970,
+      "innerHeight": 490,
+      "pathname": "/"
+    }
+  },
+  {
+    "timestamp": "2026-04-27T13:19:14.807Z",
+    "origin": "chat-widget",
+    "payload": {
+      "event": "anchor",
+      "pos": {
+        "x": 898,
+        "y": 418
+      },
+      "isOpen": false,
+      "w": 56,
+      "fitsRight": true,
+      "fitsBottom": true,
+      "innerWidth": 970,
+      "innerHeight": 490,
+      "pathname": "/"
+    }
   }
 ]
