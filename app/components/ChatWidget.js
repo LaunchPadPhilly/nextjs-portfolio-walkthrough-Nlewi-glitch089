@@ -10,6 +10,59 @@ const EDGE_PADDING = 16
 const BUBBLE_SIZE = 56
 const DEFAULT_PANEL_WIDTH = 380
 const DEFAULT_PANEL_HEIGHT = 560
+// position persistence removed — widget anchors to code-defined defaults
+let __chatWidget_anchorLogged = false
+
+async function postDebug(payload) {
+  try {
+    // Keep payload small and non-sensitive
+    await fetch('/api/debug', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  } catch (e) {
+    // swallow errors silently
+  }
+}
+
+function getWidgetSize(isOpen) {
+  if (typeof window === 'undefined') return { width: DEFAULT_PANEL_WIDTH, height: DEFAULT_PANEL_HEIGHT }
+  if (!isOpen) return { width: BUBBLE_SIZE, height: BUBBLE_SIZE }
+  return {
+    width: Math.min(DEFAULT_PANEL_WIDTH, window.innerWidth - EDGE_PADDING * 2),
+    height: Math.min(DEFAULT_PANEL_HEIGHT, Math.round(window.innerHeight * 0.7)),
+  }
+}
+
+function clampPosition(nextPosition, isOpen) {
+  if (typeof window === 'undefined') return nextPosition
+  const { width, height } = getWidgetSize(isOpen)
+  try {
+    // Debug: log incoming and computed bounds
+    // eslint-disable-next-line no-console
+    console.log('[ChatWidget] clampPosition input:', { nextPosition, width, height, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
+  } catch (e) {}
+  return {
+    x: Math.min(Math.max(EDGE_PADDING, nextPosition.x), Math.max(EDGE_PADDING, window.innerWidth - width - EDGE_PADDING)),
+    y: Math.min(Math.max(EDGE_PADDING, nextPosition.y), Math.max(EDGE_PADDING, window.innerHeight - height - EDGE_PADDING)),
+  }
+}
+
+function getDefaultPosition(isOpen) {
+  if (typeof window === 'undefined') return { x: window.innerWidth - EDGE_PADDING - 56, y: window.innerHeight - EDGE_PADDING - 56 }
+  const { width, height } = getWidgetSize(isOpen)
+  try {
+    // Debug: log default position calculation
+    // eslint-disable-next-line no-console
+    console.log('[ChatWidget] getDefaultPosition:', { isOpen, width, height, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
+  } catch (e) {}
+  // Position on the right side, bottom-right corner
+  return {
+    x: Math.max(EDGE_PADDING, window.innerWidth - width - EDGE_PADDING),
+    y: Math.max(EDGE_PADDING, window.innerHeight - BUBBLE_SIZE - EDGE_PADDING),
+  }
+}
 
 function normalizeAvatarPath(path) {
   if (!path || typeof path !== 'string') return DEFAULT_AVATAR_PATH
@@ -39,6 +92,7 @@ export default function ChatWidget() {
   const [loading, setLoading] = useState(false)
   const [avatarPath, setAvatarPath] = useState(DEFAULT_AVATAR_PATH)
   const [sessionId, setSessionId] = useState(null)
+  const [position, setPosition] = useState(null)
 
   const endRef = useRef(null)
   const audioCtxRef = useRef(null)
@@ -83,6 +137,19 @@ export default function ChatWidget() {
     window.addEventListener('contextUpdated', onContextUpdated)
     return () => window.removeEventListener('contextUpdated', onContextUpdated)
   }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    // Always anchor to default bottom-right position; do not persist or restore.
+    setPosition(getDefaultPosition(open))
+
+    function handleResize() {
+      setPosition(getDefaultPosition(open))
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [open])
 
   // No persistence — keep widget static
 
@@ -231,23 +298,70 @@ export default function ChatWidget() {
     setOpen(current => !current)
   }
 
-  // Don't render until portal is mounted to avoid hydration issues
-  if (!portalMounted) return null
+  // Don't render until position is initialised by the mount effect.
+  // Both server and client first-render produce null → no hydration mismatch.
+  // The widget then appears at the correct bottom-right position on first paint,
+  // with no flash or jump to the top-left fallback.
+  if (position === null) return null
+
+  const widgetPosition = position
+  const anchorStyle = styleForPosition(widgetPosition, false, BUBBLE_SIZE)
+  // Compute panel style so it opens above the bubble and to the left
+  // This ensures the panel doesn't overlap with the bubble or push off-screen
+  const panelSize = getWidgetSize(true)
+  // Position panel above the bubble on the right side
+  const pad = 12
+  const extraOffset = 40
+  const rawTop = widgetPosition.y - panelSize.height - pad - extraOffset
+  const panelTop = Math.max(EDGE_PADDING, rawTop)
+  // Panel's right edge should align with the bubble's right edge, accounting for width
+  const panelLeft = widgetPosition.x + BUBBLE_SIZE - panelSize.width
+  // Force fixed positioning, no transform, and top/left inline so panel behaves
+  // exactly like the bubble (not affected by page stacking contexts).
+  const panelStyle = { left: panelLeft, top: panelTop, position: 'fixed', zIndex: 2147483647, transform: 'none' }
+
+  function styleForPosition(pos, isOpen, boxWidth) {
+    if (typeof window === 'undefined') return { left: pos.x, top: pos.y }
+    const w = boxWidth || getWidgetSize(isOpen).width
+    // prefer left/top but fall back to right/bottom if there's any chance of clipping
+    const fitsRight = pos.x + w + EDGE_PADDING <= window.innerWidth
+    const fitsBottom = pos.y + (getWidgetSize(isOpen).height || DEFAULT_PANEL_HEIGHT) + EDGE_PADDING <= window.innerHeight
+    try {
+      // Debug: log anchoring decision
+      // eslint-disable-next-line no-console
+      console.log('[ChatWidget] styleForPosition:', { pos, isOpen, w, fitsRight, fitsBottom, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
+      if (!__chatWidget_anchorLogged) {
+        __chatWidget_anchorLogged = true
+        try { postDebug({ event: 'anchor', pos, isOpen, w, fitsRight, fitsBottom, innerWidth: window.innerWidth, innerHeight: window.innerHeight, pathname: window.location.pathname }) } catch (e) {}
+      }
+    } catch (e) {}
+    if (fitsRight && fitsBottom) return { left: pos.x, top: pos.y }
+    // if doesn't fit right, anchor to right edge
+    const style = {}
+    if (!fitsRight) style.right = EDGE_PADDING
+    else style.left = pos.x
+    if (!fitsBottom) style.bottom = EDGE_PADDING
+    else style.top = pos.y
+    return style
+  }
 
   const jsx = (
-    <div className={styles.wrapper}>
-      {!open && (
-        <button className={styles.bubble} onClick={toggleOpen} aria-label="Ask AI">
-          <span>✨</span>
-          <span className={styles.bubbleLabel}>Ask AI</span>
-        </button>
-      )}
+    <>
+      <div className={styles.anchor} style={anchorStyle}>
+        {!open && (
+          <button className={styles.bubble} onClick={toggleOpen} aria-label="Ask AI">
+            <span>✨</span>
+            <span className={styles.bubbleLabel}>Ask AI</span>
+          </button>
+        )}
+      </div>
 
       {open && (
         <div
           className={`${styles.panel} ${styles.open}`}
           role="dialog"
           aria-hidden={!open}
+          style={panelStyle}
         >
           <div className={styles.header}>
             <div className={styles.headerAvatar}>
@@ -314,8 +428,9 @@ export default function ChatWidget() {
           <div className={styles.footer}>Powered by AI</div>
         </div>
       )}
-    </div>
+    </>
   )
 
+  if (!portalMounted) return null
   return createPortal(jsx, typeof document !== 'undefined' ? document.body : null)
 }

@@ -34,41 +34,5 @@
       "innerHeight": 490,
       "pathname": "/"
     }
-  },
-  {
-    "timestamp": "2026-04-24T15:15:58.796Z",
-    "origin": "chat-widget",
-    "payload": {
-      "event": "anchor",
-      "pos": {
-        "x": 898,
-        "y": 418
-      },
-      "isOpen": false,
-      "w": 56,
-      "fitsRight": true,
-      "fitsBottom": true,
-      "innerWidth": 970,
-      "innerHeight": 490,
-      "pathname": "/"
-    }
-  },
-  {
-    "timestamp": "2026-04-24T15:16:09.984Z",
-    "origin": "chat-widget",
-    "payload": {
-      "event": "anchor",
-      "pos": {
-        "x": 1240,
-        "y": 528
-      },
-      "isOpen": false,
-      "w": 56,
-      "fitsRight": true,
-      "fitsBottom": true,
-      "innerWidth": 1312,
-      "innerHeight": 600,
-      "pathname": "/"
-    }
   }
 ]
