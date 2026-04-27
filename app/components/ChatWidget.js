@@ -359,9 +359,9 @@ export default function ChatWidget() {
                     style={{ marginBottom: 12, maxWidth: '100%' }}
                     className={message.role === 'user' ? styles.user : (message.pending ? `${styles.ai} ${styles.pending}` : styles.ai)}
                   >
-                    {message.pending ? (
-                      <span className={styles.ellipsis}><span>.</span><span>.</span><span>.</span></span>
-                    ) : (
+            {message.pending ? (
+              <span className={styles.loadingMessage}>Gathering a response<span className={styles.loadingDots}><span>.</span><span>.</span><span>.</span></span></span>
+            ) : (
                       message.content
                     )}
                   </div>
