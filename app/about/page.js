@@ -102,8 +102,8 @@ export default function About() {
   return (
     <div className="site-container" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <header className="reveal">
-        <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
-            <div style={{ position: 'relative', width: '88px', height: '88px', borderRadius: '9999px', overflow: 'visible' }}>
+        <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
+            <div style={{ position: 'relative', width: '88px', height: '88px', borderRadius: '9999px', overflow: 'hidden', flexShrink: 0 }}>
             <div style={{ position: 'absolute', inset: 0, borderRadius: '9999px', background: 'linear-gradient(90deg, var(--accent3), var(--accent), var(--accent2))', zIndex: 1, width: 'calc(100% + 6px)', height: 'calc(100% + 6px)', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }} />
             <div style={{ position: 'absolute', inset: 0, borderRadius: '9999px', background: 'radial-gradient(circle, rgba(161,75,255,0.12), rgba(0,240,255,0.06))', filter: 'blur(6px)', opacity: 0.22, width: 'calc(100% + 12px)', height: 'calc(100% + 12px)', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }} />
             <div style={{ position: 'relative', zIndex: 3, width: '100%', height: '100%', borderRadius: '9999px', overflow: 'hidden' }}>
