@@ -3,7 +3,7 @@ import ClientParallaxWrapper from './components/ClientParallaxWrapper'
 import ScrollReveal from './components/ScrollReveal'
 import SideNavigation from './components/SideNavigation'
 import ChatWidget from './components/ChatWidget'
-import Navbar from './components/Navbar'
+import AdminModalProvider from './components/AdminModalProvider'
 
 export const metadata = {
   title: 'My Portfolio',
@@ -17,8 +17,8 @@ export default function RootLayout({ children }) {
         {/* animated background layers (client) */}
         <ClientParallaxWrapper />
 
-        {/* Navbar with admin event listener */}
-        <Navbar />
+        {/* Invisible admin modal provider - listens for openAdmin event */}
+        <AdminModalProvider />
 
         {/* Side navigation panel */}
         <SideNavigation />
