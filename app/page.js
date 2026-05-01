@@ -40,21 +40,6 @@ export default function Home() {
             See All Projects →
           </Link>
         </div>
-
-        <div className="card reveal" style={{ marginTop: '1.5rem' }}>
-          <div style={{ fontWeight: 800, color: 'var(--accent2)', marginBottom: '0.75rem' }}>Quick Links</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <Link href="/about" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: '500' }}>
-              → Learn more about me
-            </Link>
-            <Link href="/projects" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: '500' }}>
-              → View my portfolio
-            </Link>
-            <Link href="/contact" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: '500' }}>
-              → Get in touch
-            </Link>
-          </div>
-        </div>
       </section>
     </div>
   )
