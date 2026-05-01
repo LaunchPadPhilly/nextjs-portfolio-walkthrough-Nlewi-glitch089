@@ -106,7 +106,7 @@ export default function About() {
             <div style={{ position: 'relative', width: '88px', height: '88px', borderRadius: '9999px', overflow: 'hidden', flexShrink: 0 }}>
             <div style={{ position: 'absolute', inset: 0, borderRadius: '9999px', background: 'linear-gradient(90deg, var(--accent3), var(--accent), var(--accent2))', zIndex: 1, width: 'calc(100% + 6px)', height: 'calc(100% + 6px)', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }} />
             <div style={{ position: 'absolute', inset: 0, borderRadius: '9999px', background: 'radial-gradient(circle, rgba(161,75,255,0.12), rgba(0,240,255,0.06))', filter: 'blur(6px)', opacity: 0.22, width: 'calc(100% + 12px)', height: 'calc(100% + 12px)', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }} />
-            <div style={{ position: 'relative', zIndex: 3, width: '100%', height: '100%', borderRadius: '9999px', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', zIndex: 3, width: '100%', height: '100%', borderRadius: '9999px', overflow: 'hidden', pointerEvents: 'auto' }}>
               {/* Client-side trigger so clicking the profile image opens admin */}
               <ProfileTriggerClient src="/download.png?v=2" size={88} />
             </div>

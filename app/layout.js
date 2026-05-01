@@ -3,6 +3,7 @@ import ClientParallaxWrapper from './components/ClientParallaxWrapper'
 import ScrollReveal from './components/ScrollReveal'
 import SideNavigation from './components/SideNavigation'
 import ChatWidget from './components/ChatWidget'
+import Navbar from './components/Navbar'
 
 export const metadata = {
   title: 'My Portfolio',
@@ -15,6 +16,9 @@ export default function RootLayout({ children }) {
       <body className="app-root">
         {/* animated background layers (client) */}
         <ClientParallaxWrapper />
+
+        {/* Navbar with admin event listener */}
+        <Navbar />
 
         {/* Side navigation panel */}
         <SideNavigation />
