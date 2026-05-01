@@ -50,18 +50,9 @@ function clampPosition(nextPosition, isOpen) {
 }
 
 function getDefaultPosition(isOpen) {
-  if (typeof window === 'undefined') return { x: EDGE_PADDING, y: EDGE_PADDING }
-  const { width, height } = getWidgetSize(isOpen)
-  try {
-    // Debug: log default position calculation
-    // eslint-disable-next-line no-console
-    console.log('[ChatWidget] getDefaultPosition:', { isOpen, width, height, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
-  } catch (e) {}
-  // Preview placement: anchor to left edge, ~25% down the viewport
-  return {
-    x: EDGE_PADDING,
-    y: Math.max(EDGE_PADDING, Math.round(window.innerHeight * 0.25)),
-  }
+  if (typeof window === 'undefined') return { x: 0, y: 0 }
+  // Always return bottom-right anchor (0, 0) - actual positioning done via CSS with right/bottom
+  return { x: 0, y: 0 }
 }
 
 function normalizeAvatarPath(path) {
@@ -304,77 +295,40 @@ export default function ChatWidget() {
   // with no flash or jump to the top-left fallback.
   if (position === null) return null
 
-  const widgetPosition = position
-  const anchorStyle = styleForPosition(widgetPosition, false, BUBBLE_SIZE)
-  // Compute panel style so it opens above the bubble to avoid overlap.
-  // Use the same anchor (left/right + top/bottom) and shift the panel above
-  const panelSize = getWidgetSize(true)
-  // Simpler: anchor the panel directly above the bubble's computed widgetPosition.
-  // This guarantees the panel follows the bubble and avoids interacting with
-  // other page anchoring logic that previously caused the panel to remain at bottom.
-  const pad = 12
-  // Nudge the panel further upward so it clears the bubble and footer reliably
-  const extraOffset = 40
-  const rawTop = widgetPosition.y - panelSize.height - pad - extraOffset
-  const panelTop = Math.max(EDGE_PADDING, rawTop)
-  const panelLeft = widgetPosition.x
-  // Force fixed positioning, no transform, and top/left inline so panel behaves
-  // exactly like the bubble (not affected by page stacking contexts).
-  const panelStyle = { left: panelLeft, top: panelTop, position: 'fixed', zIndex: 2147483647, transform: 'none' }
-
-  function styleForPosition(pos, isOpen, boxWidth) {
-    if (typeof window === 'undefined') return { left: pos.x, top: pos.y }
-    const w = boxWidth || getWidgetSize(isOpen).width
-    // prefer left/top but fall back to right/bottom if there's any chance of clipping
-    const fitsRight = pos.x + w + EDGE_PADDING <= window.innerWidth
-    const fitsBottom = pos.y + (getWidgetSize(isOpen).height || DEFAULT_PANEL_HEIGHT) + EDGE_PADDING <= window.innerHeight
-    try {
-      // Debug: log anchoring decision
-      // eslint-disable-next-line no-console
-      console.log('[ChatWidget] styleForPosition:', { pos, isOpen, w, fitsRight, fitsBottom, innerWidth: window.innerWidth, innerHeight: window.innerHeight })
-      if (!__chatWidget_anchorLogged) {
-        __chatWidget_anchorLogged = true
-        try { postDebug({ event: 'anchor', pos, isOpen, w, fitsRight, fitsBottom, innerWidth: window.innerWidth, innerHeight: window.innerHeight, pathname: window.location.pathname }) } catch (e) {}
-      }
-    } catch (e) {}
-    if (fitsRight && fitsBottom) return { left: pos.x, top: pos.y }
-    // if doesn't fit right, anchor to right edge
-    const style = {}
-    if (!fitsRight) style.right = EDGE_PADDING
-    else style.left = pos.x
-    if (!fitsBottom) style.bottom = EDGE_PADDING
-    else style.top = pos.y
-    return style
+  const wrapperStyle = {
+    position: 'fixed',
+    right: 24,
+    bottom: 24,
+    zIndex: 2147483647,
+    pointerEvents: 'auto',
   }
 
   const jsx = (
-    <>
-      <div className={styles.anchor} style={anchorStyle}>
-        {!open && (
-          <button className={styles.bubble} onClick={toggleOpen} aria-label="Open chat">
-            🤖
-          </button>
-        )}
-      </div>
+    <div style={wrapperStyle}>
+      {!open && (
+        <button className={styles.bubble} onClick={toggleOpen} aria-label="Ask AI">
+          <span>✨</span>
+          <span className={styles.bubbleLabel}>Ask AI</span>
+        </button>
+      )}
 
       {open && (
         <div
-          className={`${styles.panel} ${open ? styles.open : ''}`}
+          className={`${styles.panel} ${styles.open}`}
           role="dialog"
           aria-hidden={!open}
-          style={panelStyle}
         >
           <div className={styles.header}>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div className={styles.headerAvatar}>
               <div className={styles.avatar} aria-hidden>
                 <Image src={avatarPath || DEFAULT_AVATAR_PATH} alt="avatar" width={40} height={40} className={styles.avatarImg} onError={() => setAvatarPath(DEFAULT_AVATAR_PATH)} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <strong>Nakerra&apos;s AI Guide</strong>
-                <small style={{ color: 'rgba(255,255,255,0.6)' }}>Ask about projects, skills, or hiring</small>
+              <div>
+                <div><strong>Nakerra&apos;s AI Guide</strong></div>
+                <div className={styles.headerSubtitle}>Ask about my projects, skills, or experience</div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div className={styles.headerControls}>
               <button className={styles.iconBtn} title="Save conversation" onClick={saveConversation}>💾</button>
               <button className={styles.iconBtn} title="Download conversation" onClick={downloadConversation}>⬇️</button>
               <button className={styles.iconBtn} title="Clear conversation" onClick={clearConversation}>🗑️</button>
@@ -405,9 +359,9 @@ export default function ChatWidget() {
                     style={{ marginBottom: 12, maxWidth: '100%' }}
                     className={message.role === 'user' ? styles.user : (message.pending ? `${styles.ai} ${styles.pending}` : styles.ai)}
                   >
-                    {message.pending ? (
-                      <span className={styles.ellipsis}><span>.</span><span>.</span><span>.</span></span>
-                    ) : (
+            {message.pending ? (
+              <span className={styles.loadingMessage}>Gathering a response<span className={styles.loadingDots}><span>.</span><span>.</span><span>.</span></span></span>
+            ) : (
                       message.content
                     )}
                   </div>
@@ -429,7 +383,7 @@ export default function ChatWidget() {
           <div className={styles.footer}>Powered by AI</div>
         </div>
       )}
-    </>
+    </div>
   )
 
   if (!portalMounted) return null

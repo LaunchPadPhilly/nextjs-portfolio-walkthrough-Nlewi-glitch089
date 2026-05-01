@@ -1,9 +1,9 @@
 import './globals.css'
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
 import ClientParallaxWrapper from './components/ClientParallaxWrapper'
 import ScrollReveal from './components/ScrollReveal'
+import SideNavigation from './components/SideNavigation'
 import ChatWidget from './components/ChatWidget'
+import AdminModalProvider from './components/AdminModalProvider'
 
 export const metadata = {
   title: 'My Portfolio',
@@ -17,14 +17,22 @@ export default function RootLayout({ children }) {
         {/* animated background layers (client) */}
         <ClientParallaxWrapper />
 
-        <Navbar />
+        {/* Invisible admin modal provider - listens for openAdmin event */}
+        <AdminModalProvider />
 
-        <main>
-          {children}
-        </main>
+        {/* Side navigation panel */}
+        <SideNavigation />
 
-        <Footer />
+        {/* Main content area */}
+        <div className="main-content-wrapper">
+          <div className="central-content">
+            <main>
+              {children}
+            </main>
+          </div>
+        </div>
 
+        {/* AI Assistant - fixed dock panel */}
         <ChatWidget />
 
         <ScrollReveal />

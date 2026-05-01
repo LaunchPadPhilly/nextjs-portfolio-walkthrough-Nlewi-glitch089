@@ -40,7 +40,7 @@ export default function Projects() {
         <div style={{ position: 'absolute', width: 420, height: 420, left: '6%', bottom: -120, filter: 'blur(60px)', opacity: 0.28, background: 'radial-gradient(circle at center, #06b6d4, rgba(6,182,212,0.32))' }} />
       </div>
 
-      <div className="site-container" style={{ position: 'relative', zIndex: 10 }}>
+      <div className="site-container" style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', position: 'relative', zIndex: 10 }}>
         <header style={{ marginBottom: '0.5rem' }}>
           <h1 style={{ fontSize: 'clamp(1.8rem,4.8vw,3rem)', fontWeight: 800, color: 'var(--foreground)' }}>My Projects</h1>
           <p style={{ color: 'var(--accent)', fontWeight: 600, marginTop: '0.5rem' }}>A look at what I&apos;ve built — and what&apos;s coming next.</p>

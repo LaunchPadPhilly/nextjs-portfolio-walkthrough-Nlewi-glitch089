@@ -1,18 +1,6 @@
 [
   {
-    "timestamp": "2026-03-27T19:55:52.583Z",
-    "origin": "chat-widget",
-    "payload": {
-      "event": "save",
-      "position": {
-        "x": 1216,
-        "y": 512
-      },
-      "pathname": "/"
-    }
-  },
-  {
-    "timestamp": "2026-03-27T20:36:21.704Z",
+    "timestamp": "2026-04-24T15:15:18.822Z",
     "origin": "chat-widget",
     "payload": {
       "event": "anchor",
@@ -30,74 +18,56 @@
     }
   },
   {
-    "timestamp": "2026-03-27T20:43:34.776Z",
+    "timestamp": "2026-04-24T15:15:18.839Z",
     "origin": "chat-widget",
     "payload": {
       "event": "anchor",
       "pos": {
         "x": 16,
-        "y": 150
+        "y": 123
       },
       "isOpen": false,
       "w": 56,
       "fitsRight": true,
       "fitsBottom": true,
-      "innerWidth": 1312,
-      "innerHeight": 600,
+      "innerWidth": 970,
+      "innerHeight": 490,
       "pathname": "/"
     }
   },
   {
-    "timestamp": "2026-03-27T20:46:07.815Z",
+    "timestamp": "2026-04-27T13:18:49.535Z",
     "origin": "chat-widget",
     "payload": {
       "event": "anchor",
       "pos": {
-        "x": 16,
-        "y": 150
+        "x": 898,
+        "y": 418
       },
       "isOpen": false,
       "w": 56,
       "fitsRight": true,
       "fitsBottom": true,
-      "innerWidth": 1312,
-      "innerHeight": 600,
+      "innerWidth": 970,
+      "innerHeight": 490,
       "pathname": "/"
     }
   },
   {
-    "timestamp": "2026-03-27T20:49:47.324Z",
+    "timestamp": "2026-04-27T13:19:14.807Z",
     "origin": "chat-widget",
     "payload": {
       "event": "anchor",
       "pos": {
-        "x": 16,
-        "y": 150
+        "x": 898,
+        "y": 418
       },
       "isOpen": false,
       "w": 56,
       "fitsRight": true,
       "fitsBottom": true,
-      "innerWidth": 1312,
-      "innerHeight": 600,
-      "pathname": "/"
-    }
-  },
-  {
-    "timestamp": "2026-03-27T20:53:56.824Z",
-    "origin": "chat-widget",
-    "payload": {
-      "event": "anchor",
-      "pos": {
-        "x": 16,
-        "y": 150
-      },
-      "isOpen": false,
-      "w": 56,
-      "fitsRight": true,
-      "fitsBottom": true,
-      "innerWidth": 1312,
-      "innerHeight": 600,
+      "innerWidth": 970,
+      "innerHeight": 490,
       "pathname": "/"
     }
   }

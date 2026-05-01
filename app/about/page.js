@@ -100,13 +100,13 @@ export default function About() {
   ]))
 
   return (
-    <div className="site-container">
+    <div className="site-container" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <header className="reveal">
-        <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
-            <div style={{ position: 'relative', width: '88px', height: '88px', borderRadius: '9999px', overflow: 'visible' }}>
+        <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
+            <div style={{ position: 'relative', width: '88px', height: '88px', borderRadius: '9999px', overflow: 'hidden', flexShrink: 0 }}>
             <div style={{ position: 'absolute', inset: 0, borderRadius: '9999px', background: 'linear-gradient(90deg, var(--accent3), var(--accent), var(--accent2))', zIndex: 1, width: 'calc(100% + 6px)', height: 'calc(100% + 6px)', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }} />
             <div style={{ position: 'absolute', inset: 0, borderRadius: '9999px', background: 'radial-gradient(circle, rgba(161,75,255,0.12), rgba(0,240,255,0.06))', filter: 'blur(6px)', opacity: 0.22, width: 'calc(100% + 12px)', height: 'calc(100% + 12px)', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }} />
-            <div style={{ position: 'relative', zIndex: 3, width: '100%', height: '100%', borderRadius: '9999px', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', zIndex: 3, width: '100%', height: '100%', borderRadius: '9999px', overflow: 'hidden', pointerEvents: 'auto' }}>
               {/* Client-side trigger so clicking the profile image opens admin */}
               <ProfileTriggerClient src="/download.png?v=2" size={88} />
             </div>
@@ -118,7 +118,7 @@ export default function About() {
         </div>
       </header>
 
-      <div className="grid-two">
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem' }}>
         <section>
           <div className="card reveal">
             <div className="card-heading">Who I Am</div>
@@ -188,18 +188,6 @@ export default function About() {
             </div>
           </div>
         </section>
-
-        <aside style={{ display: 'grid', gap: '0.75rem' }}>
-          <div className="card reveal">
-            <div className="card-heading">Beyond the Screen</div>
-            <p style={{ color: 'var(--foreground)', fontSize: '1.03rem', lineHeight: 1.72 }}>I love story-rich game universes, interactive media, and anything with a neon, cosmic, or sci-fi feel. My goal is to build digital spaces that feel like an adventure — where users feel welcome and excited to dive in.</p>
-          </div>
-
-          <div className="card reveal">
-            <div className="card-heading">My Purpose</div>
-            <p style={{ color: 'var(--foreground)', fontSize: '1.03rem', lineHeight: 1.72 }}>I create with intention: to make technology feel bold, inclusive, and inspiring. Every project is a chance to help someone take a step toward something new.</p>
-          </div>
-        </aside>
       </div>
     </div>
   )
